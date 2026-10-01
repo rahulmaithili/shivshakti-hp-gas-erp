@@ -1,7 +1,7 @@
 /**
  * ============================================================================
  * SHIV SHAKTI HP GAS AGENCY - ROJNAMCHA FRONTEND (Vanilla JS)
- * Production-Ready, Zero Frameworks, Mobile-First
+ * Enterprise ERP: Collapsible Sidebar, Theme Switcher, Real-time Accounting
  * ============================================================================
  */
 
@@ -10,6 +10,7 @@ const state = {
   token: localStorage.getItem('ss_token') || null,
   user: JSON.parse(localStorage.getItem('ss_user') || 'null'),
   apiUrl: localStorage.getItem('ss_api_url') || '/api',
+  theme: localStorage.getItem('ss_theme') || 'light',
   currentDate: getTodayDateString(),
   meta: {
     rates: [],
@@ -21,6 +22,20 @@ const state = {
   todayEntries: [],
   duesList: [],
   stockList: []
+};
+
+// Screen Headings Mapping
+const SCREEN_TITLES = {
+  'screen-login': 'Login & Authentication',
+  'screen-dashboard': 'Daily Overview [डैशबोर्ड]',
+  'screen-entry': 'Billing & Transactions [बिक्री]',
+  'screen-vendors': 'Delivery Vendors & Godown [हॉकर संग्रह]',
+  'screen-cashbook': 'Cash Book & Note Counter [रोकड़ बही]',
+  'screen-dues': 'Outstanding Dues Register [बकाया]',
+  'screen-stock': 'Cylinder Stock Inventory [स्टॉक]',
+  'screen-report': 'Official Daily Report [रिपोर्ट]',
+  'screen-archive': 'Google Drive Archives [फ़ाइलें]',
+  'screen-admin': 'Administration & Masters [प्रशासन]'
 };
 
 // Default Master Rates Fallback
@@ -64,6 +79,7 @@ const DEFAULT_CYLINDER_TYPES = [
  * ============================================================================
  */
 document.addEventListener('DOMContentLoaded', () => {
+  initTheme();
   initDatePicker();
   initApiConfig();
 
@@ -77,6 +93,34 @@ document.addEventListener('DOMContentLoaded', () => {
     switchTab('screen-login');
   }
 });
+
+/* Theme Controller (Day / Dark Mode) */
+function initTheme() {
+  document.documentElement.setAttribute('data-theme', state.theme);
+}
+
+function toggleTheme() {
+  state.theme = state.theme === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', state.theme);
+  localStorage.setItem('ss_theme', state.theme);
+  showToast(`${state.theme === 'dark' ? 'Night / Dark Mode 🌙' : 'Day / Light Mode ☀️'} activated`, 'info');
+}
+
+/* Sidebar Controller */
+function toggleSidebar(forceState) {
+  const sidebar = document.getElementById('appSidebar');
+  const backdrop = document.getElementById('sidebarBackdrop');
+  if (!sidebar) return;
+
+  const shouldOpen = forceState !== undefined ? forceState : !sidebar.classList.contains('open');
+  if (shouldOpen) {
+    sidebar.classList.add('open');
+    if (backdrop) backdrop.classList.add('open');
+  } else {
+    sidebar.classList.remove('open');
+    if (backdrop) backdrop.classList.remove('open');
+  }
+}
 
 function initDatePicker() {
   const picker = document.getElementById('globalDatePicker');
@@ -107,25 +151,23 @@ function onDateChanged() {
 }
 
 function applyAuthUI(isLoggedIn) {
-  const authActions = document.getElementById('headerAuthActions');
   const bottomNav = document.getElementById('bottomNav');
-  const userBadge = document.getElementById('headerUserBadge');
-  const roleBadge = document.getElementById('headerRoleBadge');
-  const adminTab = document.getElementById('navItemAdmin');
+  const sidebarAdminItem = document.getElementById('navSidebarAdmin');
+  const sidebarUserName = document.getElementById('sidebarUserName');
+  const sidebarUserRole = document.getElementById('sidebarUserRole');
+  const sidebarAvatar = document.getElementById('sidebarAvatar');
 
   if (isLoggedIn && state.user) {
-    authActions.style.display = 'flex';
-    bottomNav.style.display = 'flex';
-    userBadge.textContent = state.user.username;
-    roleBadge.textContent = (state.user.role || 'cashier').toUpperCase();
-    if (state.user.role === 'admin') {
-      adminTab.style.display = 'flex';
-    } else {
-      adminTab.style.display = 'none';
+    if (bottomNav) bottomNav.style.display = 'flex';
+    if (sidebarUserName) sidebarUserName.textContent = state.user.username;
+    if (sidebarUserRole) sidebarUserRole.textContent = (state.user.role || 'cashier').toUpperCase();
+    if (sidebarAvatar) sidebarAvatar.textContent = (state.user.username || 'U').charAt(0).toUpperCase();
+
+    if (sidebarAdminItem) {
+      sidebarAdminItem.style.display = (state.user.role === 'admin') ? 'flex' : 'none';
     }
   } else {
-    authActions.style.display = 'none';
-    bottomNav.style.display = 'none';
+    if (bottomNav) bottomNav.style.display = 'none';
   }
 }
 
@@ -199,7 +241,7 @@ async function handleLoginSubmit(e) {
   }
 
   submitBtn.disabled = true;
-  submitBtn.textContent = 'Verifying... [सत्यापन जारी]';
+  submitBtn.innerHTML = '<span>Verifying... [सत्यापन जारी]</span>';
 
   try {
     const data = await apiCall('login', { username, password });
@@ -217,7 +259,10 @@ async function handleLoginSubmit(e) {
     // Error handled in apiCall
   } finally {
     submitBtn.disabled = false;
-    submitBtn.textContent = 'Secure Login [लॉगिन करें]';
+    submitBtn.innerHTML = `
+      <span>Secure Login [लॉगिन करें]</span>
+      <svg viewBox="0 0 24 24" class="svg-icon"><path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    `;
   }
 }
 
@@ -228,7 +273,7 @@ async function handleLogoutClick() {
         await apiCall('logout', {}, false);
       }
     } catch (e) {
-      // Ignore logout errors
+      // Ignore
     }
     localStorage.removeItem('ss_token');
     localStorage.removeItem('ss_user');
@@ -256,7 +301,6 @@ async function fetchMetadata() {
       cylinderTypes: data.cylinderTypes || DEFAULT_CYLINDER_TYPES
     };
   } catch (e) {
-    // Fallback to local defaults if network fails
     state.meta = {
       rates: DEFAULT_RATES,
       vendors: DEFAULT_VENDORS,
@@ -274,16 +318,37 @@ async function fetchMetadata() {
  * ============================================================================
  */
 function switchTab(screenId) {
+  // If not logged in and not heading to login
+  if (!state.token && screenId !== 'screen-login') {
+    screenId = 'screen-login';
+  }
+
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const targetScreen = document.getElementById(screenId);
   if (targetScreen) targetScreen.classList.add('active');
 
-  // Update bottom navigation bar
-  document.querySelectorAll('.nav-item').forEach(btn => {
+  // Update Topbar Heading
+  const headingEl = document.getElementById('currentScreenTitle');
+  if (headingEl && SCREEN_TITLES[screenId]) {
+    headingEl.textContent = SCREEN_TITLES[screenId];
+  }
+
+  // Update Sidebar Active state
+  document.querySelectorAll('.app-sidebar .nav-link').forEach(btn => {
     btn.classList.toggle('active', btn.getAttribute('onclick')?.includes(screenId));
   });
 
-  // Load screen-specific data
+  // Update Bottom Nav Active state
+  document.querySelectorAll('.bottom-nav-item').forEach(btn => {
+    btn.classList.toggle('active', btn.getAttribute('onclick')?.includes(screenId));
+  });
+
+  // Close sidebar drawer on mobile
+  if (window.innerWidth <= 900) {
+    toggleSidebar(false);
+  }
+
+  // Screen data loading
   if (screenId === 'screen-dashboard') {
     loadDashboardData();
   } else if (screenId === 'screen-entry') {
@@ -334,19 +399,17 @@ async function loadDashboardData() {
     const desc = document.getElementById('reconStatusDetail');
 
     if (data.reconciliation.isBalanced) {
-      banner.className = 'status-banner balanced';
+      banner.className = 'status-banner-premium balanced';
       icon.textContent = '✓';
       title.textContent = 'Accounts Balanced & Reconciled [खाता संतुलित है]';
       desc.textContent = 'Billing, digital collections, counter cash and stock reconcile with master figures.';
     } else {
-      banner.className = 'status-banner mismatch';
+      banner.className = 'status-banner-premium mismatch';
       icon.textContent = '⚠️';
       title.textContent = 'Audit Difference Detected [खाते में अंतर]';
       desc.textContent = data.reconciliation.statusText;
     }
-  } catch (e) {
-    // Error handled
-  }
+  } catch (e) {}
 }
 
 /**
@@ -458,7 +521,6 @@ async function submitEntryData(isAddAnother = false) {
     return;
   }
 
-  // Handle Split Payment submission: Create separate entries or combined entry
   if (payMode === 'SPLIT') {
     const cash = parseFloat(document.getElementById('splitCash').value) || 0;
     const upi = parseFloat(document.getElementById('splitUpi').value) || 0;
@@ -474,7 +536,7 @@ async function submitEntryData(isAddAnother = false) {
   }
 
   saveBtn.disabled = true;
-  saveBtn.textContent = 'Saving...';
+  saveBtn.innerHTML = '<span>Saving...</span>';
 
   try {
     const entryPayload = {
@@ -504,10 +566,9 @@ async function submitEntryData(isAddAnother = false) {
     loadTodayEntries();
     loadDashboardData();
   } catch (err) {
-    // Error handled
   } finally {
     saveBtn.disabled = false;
-    saveBtn.textContent = 'Save Entry [सेव करें]';
+    saveBtn.innerHTML = '<span>Save Entry [सेव करें]</span>';
   }
 }
 
@@ -523,9 +584,7 @@ async function loadTodayEntries() {
     const data = await apiCall('listEntries', { date: state.currentDate }, false);
     state.todayEntries = data.entries || [];
     renderTodayEntriesTable(state.todayEntries);
-  } catch (e) {
-    // Error handled
-  }
+  } catch (e) {}
 }
 
 function renderTodayEntriesTable(entries) {
@@ -534,23 +593,23 @@ function renderTodayEntriesTable(entries) {
   countBadge.textContent = `${entries.length} entries`;
 
   if (!entries.length) {
-    tbody.innerHTML = `<tr><td colspan="10" class="text-center text-muted">No entries recorded for ${formatDisplayDate(state.currentDate)}.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10" class="empty-state">No entries recorded for ${formatDisplayDate(state.currentDate)}.</td></tr>`;
     return;
   }
 
   tbody.innerHTML = entries.map(e => `
     <tr>
-      <td><small>${e.time || '--'}</small></td>
-      <td><span class="badge">${e.category}</span></td>
+      <td><small class="mono-font">${e.time || '--'}</small></td>
+      <td><span class="count-pill">${e.category}</span></td>
       <td><strong>${escapeHtml(e.item)}</strong></td>
-      <td class="text-center">${e.qty}</td>
-      <td class="text-right">₹${e.rate}</td>
-      <td class="text-right font-weight-bold">${formatINR(e.amount)}</td>
-      <td><span class="badge badge-success">${e.payMode}</span></td>
+      <td class="text-center mono-font">${e.qty}</td>
+      <td class="text-right mono-font">₹${e.rate}</td>
+      <td class="text-right mono-font font-weight-bold">${formatINR(e.amount)}</td>
+      <td><span class="variance-badge">${e.payMode}</span></td>
       <td>${escapeHtml(e.party || '-')}</td>
       <td><small>${escapeHtml(e.enteredBy)}</small></td>
-      <td>
-        <button class="btn btn-sm btn-outline text-danger" onclick="deleteEntryClick('${e.id}')">Delete</button>
+      <td class="text-center">
+        <button class="btn-outline-theme btn-sm text-danger" onclick="deleteEntryClick('${e.id}')">Delete</button>
       </td>
     </tr>
   `).join('');
@@ -579,45 +638,44 @@ async function loadVendorLogData() {
 
   tbody.innerHTML = vendors.map((v, idx) => `
     <tr data-vendor="${v}">
-      <td class="text-center">${idx + 1}</td>
+      <td class="text-center mono-font">${idx + 1}</td>
       <td><strong>${v}</strong></td>
-      <td><input type="number" class="v-gas" value="0" min="0" oninput="calculateVendorRow(this)"></td>
-      <td><input type="number" class="v-cash" value="0" min="0" oninput="calculateVendorRow(this)"></td>
-      <td><input type="number" class="v-upi" value="0" min="0" oninput="calculateVendorRow(this)"></td>
-      <td><input type="number" class="v-hp" value="0" min="0" oninput="calculateVendorRow(this)"></td>
-      <td><input type="number" class="v-dues" value="0" min="0" oninput="calculateVendorRow(this)"></td>
-      <td class="v-status text-center"><span class="badge badge-success">Balanced</span></td>
+      <td class="text-center"><input type="number" class="v-gas mono-font" value="0" min="0" oninput="calculateVendorRow(this)"></td>
+      <td class="text-center"><input type="number" class="v-cash mono-font" value="0" min="0" oninput="calculateVendorRow(this)"></td>
+      <td class="text-center"><input type="number" class="v-upi mono-font" value="0" min="0" oninput="calculateVendorRow(this)"></td>
+      <td class="text-center"><input type="number" class="v-hp mono-font" value="0" min="0" oninput="calculateVendorRow(this)"></td>
+      <td class="text-center"><input type="number" class="v-dues mono-font" value="0" min="0" oninput="calculateVendorRow(this)"></td>
+      <td class="v-status text-center"><span class="variance-badge">Balanced</span></td>
     </tr>
   `).join('');
 
-  // Add Delivery Total, Godown, and Grand Total
   tfoot.innerHTML = `
     <tr class="table-info font-weight-bold">
       <td colspan="2">DELIVERY TOTAL</td>
-      <td id="footDelivGas" class="text-center">0</td>
-      <td id="footDelivCash" class="text-center">0</td>
-      <td id="footDelivUpi" class="text-center">0</td>
-      <td id="footDelivHp" class="text-center">0</td>
-      <td id="footDelivDues" class="text-center">0</td>
-      <td id="footDelivStatus" class="text-center"><span class="badge badge-success">Balanced</span></td>
+      <td id="footDelivGas" class="text-center mono-font">0</td>
+      <td id="footDelivCash" class="text-center mono-font">0</td>
+      <td id="footDelivUpi" class="text-center mono-font">0</td>
+      <td id="footDelivHp" class="text-center mono-font">0</td>
+      <td id="footDelivDues" class="text-center mono-font">0</td>
+      <td id="footDelivStatus" class="text-center"><span class="variance-badge">Balanced</span></td>
     </tr>
     <tr data-vendor="GODOWN" class="font-weight-bold">
       <td colspan="2">GODOWN [गोदाम काउंटर]</td>
-      <td><input type="number" class="v-gas" id="godownGas" value="0" min="0" oninput="calculateVendorTotals()"></td>
-      <td><input type="number" class="v-cash" id="godownCash" value="0" min="0" oninput="calculateVendorTotals()"></td>
-      <td><input type="number" class="v-upi" id="godownUpi" value="0" min="0" oninput="calculateVendorTotals()"></td>
-      <td><input type="number" class="v-hp" id="godownHp" value="0" min="0" oninput="calculateVendorTotals()"></td>
-      <td><input type="number" class="v-dues" id="godownDues" value="0" min="0" oninput="calculateVendorTotals()"></td>
-      <td id="godownStatus" class="text-center"><span class="badge badge-success">Balanced</span></td>
+      <td class="text-center"><input type="number" class="v-gas mono-font" id="godownGas" value="0" min="0" oninput="calculateVendorTotals()"></td>
+      <td class="text-center"><input type="number" class="v-cash mono-font" id="godownCash" value="0" min="0" oninput="calculateVendorTotals()"></td>
+      <td class="text-center"><input type="number" class="v-upi mono-font" id="godownUpi" value="0" min="0" oninput="calculateVendorTotals()"></td>
+      <td class="text-center"><input type="number" class="v-hp mono-font" id="godownHp" value="0" min="0" oninput="calculateVendorTotals()"></td>
+      <td class="text-center"><input type="number" class="v-dues mono-font" id="godownDues" value="0" min="0" oninput="calculateVendorTotals()"></td>
+      <td id="godownStatus" class="text-center"><span class="variance-badge">Balanced</span></td>
     </tr>
-    <tr class="table-primary font-weight-bold" style="font-size: 1rem;">
+    <tr class="table-primary font-weight-bold" style="font-size: 0.95rem;">
       <td colspan="2">GRAND TOTAL</td>
-      <td id="footGrandGas" class="text-center">0</td>
-      <td id="footGrandCash" class="text-center">0</td>
-      <td id="footGrandUpi" class="text-center">0</td>
-      <td id="footGrandHp" class="text-center">0</td>
-      <td id="footGrandDues" class="text-center">0</td>
-      <td id="footGrandStatus" class="text-center"><span class="badge badge-success">Balanced</span></td>
+      <td id="footGrandGas" class="text-center mono-font text-primary">0</td>
+      <td id="footGrandCash" class="text-center mono-font text-success">0</td>
+      <td id="footGrandUpi" class="text-center mono-font text-info">0</td>
+      <td id="footGrandHp" class="text-center mono-font">0</td>
+      <td id="footGrandDues" class="text-center mono-font text-warning">0</td>
+      <td id="footGrandStatus" class="text-center"><span class="variance-badge">Balanced</span></td>
     </tr>
   `;
 
@@ -636,9 +694,9 @@ function calculateVendorRow(input) {
   const statusCell = tr.querySelector('.v-status');
 
   if (gas === totalSettled) {
-    statusCell.innerHTML = `<span class="badge badge-success">Balanced</span>`;
+    statusCell.innerHTML = `<span class="variance-badge">Balanced</span>`;
   } else {
-    statusCell.innerHTML = `<span class="badge badge-danger">Diff: ${gas - totalSettled}</span>`;
+    statusCell.innerHTML = `<span class="variance-badge mismatch">Diff: ${gas - totalSettled}</span>`;
   }
 
   calculateVendorTotals();
@@ -655,11 +713,16 @@ function calculateVendorTotals() {
     delivDues += parseFloat(tr.querySelector('.v-dues').value) || 0;
   });
 
-  document.getElementById('footDelivGas').textContent = delivGas;
-  document.getElementById('footDelivCash').textContent = delivCash;
-  document.getElementById('footDelivUpi').textContent = delivUpi;
-  document.getElementById('footDelivHp').textContent = delivHp;
-  document.getElementById('footDelivDues').textContent = delivDues;
+  const setEl = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+  };
+
+  setEl('footDelivGas', delivGas);
+  setEl('footDelivCash', delivCash);
+  setEl('footDelivUpi', delivUpi);
+  setEl('footDelivHp', delivHp);
+  setEl('footDelivDues', delivDues);
 
   const godownGas = parseFloat(document.getElementById('godownGas')?.value) || 0;
   const godownCash = parseFloat(document.getElementById('godownCash')?.value) || 0;
@@ -673,15 +736,15 @@ function calculateVendorTotals() {
   const grandHp = delivHp + godownHp;
   const grandDues = delivDues + godownDues;
 
-  document.getElementById('footGrandGas').textContent = grandGas;
-  document.getElementById('footGrandCash').textContent = grandCash;
-  document.getElementById('footGrandUpi').textContent = grandUpi;
-  document.getElementById('footGrandHp').textContent = grandHp;
-  document.getElementById('footGrandDues').textContent = grandDues;
+  setEl('footGrandGas', grandGas);
+  setEl('footGrandCash', grandCash);
+  setEl('footGrandUpi', grandUpi);
+  setEl('footGrandHp', grandHp);
+  setEl('footGrandDues', grandDues);
 
-  document.getElementById('vendorSumDelivery').textContent = `${delivGas} Cylinders`;
-  document.getElementById('vendorSumGodown').textContent = `${godownGas} Cylinders`;
-  document.getElementById('vendorSumGrand').textContent = `${grandGas} Cylinders`;
+  setEl('vendorSumDelivery', `${delivGas} Cylinders`);
+  setEl('vendorSumGodown', `${godownGas} Cylinders`);
+  setEl('vendorSumGrand', `${grandGas} Cylinders`);
 }
 
 async function saveVendorLogData() {
@@ -810,13 +873,13 @@ function verifyDenominationsVsBook(bookClosing) {
   badge.textContent = `Variance: ${formatINR(variance)}`;
 
   if (Math.abs(variance) < 0.01) {
-    badge.className = 'badge badge-success';
-    verdictBox.className = 'reconciliation-verdict';
+    badge.className = 'variance-badge';
+    verdictBox.className = 'verdict-banner-premium';
     verdictIcon.textContent = '✓';
     verdictText.textContent = 'Physical notes match book closing balance perfectly! [भौतिक नकद पूर्ण रूप से सही है]';
   } else {
-    badge.className = 'badge badge-danger';
-    verdictBox.className = 'reconciliation-verdict mismatch';
+    badge.className = 'variance-badge mismatch';
+    verdictBox.className = 'verdict-banner-premium mismatch';
     verdictIcon.textContent = '⚠️';
     verdictText.textContent = `Cash Discrepancy: Physical cash differs from book by ${formatINR(variance)}!`;
   }
@@ -883,7 +946,7 @@ async function loadDuesData(filterStatus = 'PENDING') {
 }
 
 function filterDuesTable(status, btn) {
-  document.querySelectorAll('#screen-dues .filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#screen-dues .sub-pill-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   loadDuesData(status);
 }
@@ -891,23 +954,23 @@ function filterDuesTable(status, btn) {
 function renderDuesTable(dues) {
   const tbody = document.getElementById('duesTableBody');
   if (!dues.length) {
-    tbody.innerHTML = `<tr><td colspan="7" class="text-center text-muted">No dues found in this category.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="empty-state">No dues records found.</td></tr>`;
     return;
   }
 
   tbody.innerHTML = dues.map(d => `
     <tr>
-      <td>${formatDisplayDate(d.date)}</td>
+      <td class="mono-font">${formatDisplayDate(d.date)}</td>
       <td><strong>${escapeHtml(d.party)}</strong></td>
-      <td>${formatDisplayDate(d.billDate)}</td>
-      <td class="text-right font-weight-bold text-danger">${formatINR(d.amount)}</td>
+      <td class="mono-font">${formatDisplayDate(d.billDate)}</td>
+      <td class="text-right mono-font font-weight-bold text-danger">${formatINR(d.amount)}</td>
       <td>
-        <span class="badge ${d.status === 'RECOVERED' ? 'badge-success' : 'badge-warning'}">${d.status}</span>
+        <span class="variance-badge ${d.status === 'RECOVERED' ? '' : 'mismatch'}">${d.status}</span>
       </td>
-      <td>${d.recoveredDate ? formatDisplayDate(d.recoveredDate) : '-'}</td>
-      <td>
+      <td class="mono-font">${d.recoveredDate ? formatDisplayDate(d.recoveredDate) : '-'}</td>
+      <td class="text-center">
         ${d.status === 'PENDING' ? `
-          <button class="btn btn-sm btn-primary" onclick="openRecoverDueModal('${d.rowId}', '${escapeHtml(d.party)}', ${d.amount})">
+          <button class="btn-gradient-primary btn-sm" onclick="openRecoverDueModal('${d.rowId}', '${escapeHtml(d.party)}', ${d.amount})">
             Recover [वसूलें]
           </button>
         ` : '<span>✓ Settled</span>'}
@@ -976,32 +1039,32 @@ async function loadStockData() {
   tbody.innerHTML = state.meta.cylinderTypes.map(c => `
     <tr data-type="${c}">
       <td><strong>${c}</strong></td>
-      <td><input type="number" class="st-op-fill form-control form-control-sm text-center" value="0" min="0" oninput="calculateStockTotals()"></td>
-      <td><input type="number" class="st-rec-hpcl form-control form-control-sm text-center" value="0" min="0" oninput="calculateStockTotals()"></td>
-      <td><input type="number" class="st-sold form-control form-control-sm text-center" value="0" min="0" oninput="calculateStockTotals()"></td>
-      <td><input type="number" class="st-adj form-control form-control-sm text-center" value="0" oninput="calculateStockTotals()"></td>
-      <td class="st-cl-fill text-center font-weight-bold">0</td>
-      <td><input type="number" class="st-op-emp form-control form-control-sm text-center" value="0" min="0" oninput="calculateStockTotals()"></td>
-      <td><input type="number" class="st-cust-emp form-control form-control-sm text-center" value="0" min="0" oninput="calculateStockTotals()"></td>
-      <td><input type="number" class="st-oth-emp form-control form-control-sm text-center" value="0" min="0" oninput="calculateStockTotals()"></td>
-      <td><input type="number" class="st-plant-emp form-control form-control-sm text-center" value="0" min="0" oninput="calculateStockTotals()"></td>
-      <td class="st-cl-emp text-center font-weight-bold">0</td>
+      <td><input type="number" class="st-op-fill form-control-premium mono-font text-center" value="0" min="0" oninput="calculateStockTotals()"></td>
+      <td><input type="number" class="st-rec-hpcl form-control-premium mono-font text-center" value="0" min="0" oninput="calculateStockTotals()"></td>
+      <td><input type="number" class="st-sold form-control-premium mono-font text-center" value="0" min="0" oninput="calculateStockTotals()"></td>
+      <td><input type="number" class="st-adj form-control-premium mono-font text-center" value="0" oninput="calculateStockTotals()"></td>
+      <td class="st-cl-fill text-center mono-font font-weight-bold">0</td>
+      <td><input type="number" class="st-op-emp form-control-premium mono-font text-center" value="0" min="0" oninput="calculateStockTotals()"></td>
+      <td><input type="number" class="st-cust-emp form-control-premium mono-font text-center" value="0" min="0" oninput="calculateStockTotals()"></td>
+      <td><input type="number" class="st-oth-emp form-control-premium mono-font text-center" value="0" min="0" oninput="calculateStockTotals()"></td>
+      <td><input type="number" class="st-plant-emp form-control-premium mono-font text-center" value="0" min="0" oninput="calculateStockTotals()"></td>
+      <td class="st-cl-emp text-center mono-font font-weight-bold">0</td>
     </tr>
   `).join('');
 
   tfoot.innerHTML = `
     <tr class="table-primary font-weight-bold">
       <td>TOTAL</td>
-      <td id="totOpFill" class="text-center">0</td>
-      <td id="totRecHpcl" class="text-center">0</td>
-      <td id="totSold" class="text-center">0</td>
-      <td id="totAdj" class="text-center">0</td>
-      <td id="totClFill" class="text-center">0</td>
-      <td id="totOpEmp" class="text-center">0</td>
-      <td id="totCustEmp" class="text-center">0</td>
-      <td id="totOthEmp" class="text-center">0</td>
-      <td id="totPlantEmp" class="text-center">0</td>
-      <td id="totClEmp" class="text-center">0</td>
+      <td id="totOpFill" class="text-center mono-font">0</td>
+      <td id="totRecHpcl" class="text-center mono-font">0</td>
+      <td id="totSold" class="text-center mono-font">0</td>
+      <td id="totAdj" class="text-center mono-font">0</td>
+      <td id="totClFill" class="text-center mono-font text-primary">0</td>
+      <td id="totOpEmp" class="text-center mono-font">0</td>
+      <td id="totCustEmp" class="text-center mono-font">0</td>
+      <td id="totOthEmp" class="text-center mono-font">0</td>
+      <td id="totPlantEmp" class="text-center mono-font">0</td>
+      <td id="totClEmp" class="text-center mono-font text-danger">0</td>
     </tr>
   `;
 
@@ -1040,17 +1103,22 @@ function calculateStockTotals() {
     totClEmp += clEmp;
   });
 
-  document.getElementById('totOpFill').textContent = totOpFill;
-  document.getElementById('totRecHpcl').textContent = totRecHpcl;
-  document.getElementById('totSold').textContent = totSold;
-  document.getElementById('totAdj').textContent = totAdj;
-  document.getElementById('totClFill').textContent = totClFill;
+  const setEl = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+  };
 
-  document.getElementById('totOpEmp').textContent = totOpEmp;
-  document.getElementById('totCustEmp').textContent = totCustEmp;
-  document.getElementById('totOthEmp').textContent = totOthEmp;
-  document.getElementById('totPlantEmp').textContent = totPlantEmp;
-  document.getElementById('totClEmp').textContent = totClEmp;
+  setEl('totOpFill', totOpFill);
+  setEl('totRecHpcl', totRecHpcl);
+  setEl('totSold', totSold);
+  setEl('totAdj', totAdj);
+  setEl('totClFill', totClFill);
+
+  setEl('totOpEmp', totOpEmp);
+  setEl('totCustEmp', totCustEmp);
+  setEl('totOthEmp', totOthEmp);
+  setEl('totPlantEmp', totPlantEmp);
+  setEl('totClEmp', totClEmp);
 }
 
 async function saveStockData() {
@@ -1092,18 +1160,17 @@ async function loadReportData() {
 function renderReportTable(containerId, gridData) {
   const container = document.getElementById(containerId);
   if (!gridData || !gridData.length) {
-    container.innerHTML = '<p class="text-muted text-center p-3">No report data generated yet for this sheet.</p>';
+    container.innerHTML = '<p class="empty-state">No report data generated yet for this sheet.</p>';
     return;
   }
 
-  let html = '<table class="table table-bordered table-sm" style="font-size: 0.8rem;">';
+  let html = '<table class="table-premium table-bordered table-sm" style="font-size: 0.8rem;">';
   gridData.forEach((row, rIdx) => {
-    // Only display rows with at least one non-empty value
     if (row.some(c => c !== '')) {
       html += '<tr>';
       row.forEach(cell => {
         const isHeader = rIdx < 2 || cell.includes('TOTAL') || cell.includes('SHIV SHAKTI');
-        const style = isHeader ? 'font-weight: bold; background: #f8fafc;' : '';
+        const style = isHeader ? 'font-weight: bold; background: var(--bg-card-inner);' : '';
         html += `<td style="${style}">${escapeHtml(cell)}</td>`;
       });
       html += '</tr>';
@@ -1114,7 +1181,7 @@ function renderReportTable(containerId, gridData) {
 }
 
 function switchReportTab(viewId, btn) {
-  document.querySelectorAll('#screen-report .filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#screen-report .sub-pill-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.report-view').forEach(v => v.classList.remove('active'));
 
   btn.classList.add('active');
@@ -1149,19 +1216,19 @@ async function loadArchivesList() {
     const tbody = document.getElementById('archivesTableBody');
 
     if (!data.archives || !data.archives.length) {
-      tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">No archives found. Click "Generate PDF & Excel" in the Report tab.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="5" class="empty-state">No archives found. Click "Export PDF & Excel" in Report view.</td></tr>`;
       return;
     }
 
     tbody.innerHTML = data.archives.map(a => `
       <tr>
-        <td><strong>${formatDisplayDate(a.date)}</strong></td>
+        <td class="mono-font"><strong>${formatDisplayDate(a.date)}</strong></td>
         <td>${escapeHtml(a.fileName)}</td>
-        <td><small>${a.createdAt || '-'}</small></td>
+        <td><small class="mono-font">${a.createdAt || '-'}</small></td>
         <td><small>${escapeHtml(a.generatedBy || '-')}</small></td>
-        <td>
-          <a href="${a.pdfUrl}" target="_blank" class="btn btn-sm btn-primary">View PDF</a>
-          ${a.xlsxUrl ? `<a href="${a.xlsxUrl}" target="_blank" class="btn btn-sm btn-outline">Excel</a>` : ''}
+        <td class="text-center">
+          <a href="${a.pdfUrl}" target="_blank" class="btn-gradient-primary btn-sm">PDF</a>
+          ${a.xlsxUrl ? `<a href="${a.xlsxUrl}" target="_blank" class="btn-outline-theme btn-sm">Excel</a>` : ''}
         </td>
       </tr>
     `).join('');
@@ -1174,7 +1241,7 @@ async function loadArchivesList() {
  * ============================================================================
  */
 function switchAdminTab(tabId, btn) {
-  document.querySelectorAll('#screen-admin .filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#screen-admin .sub-pill-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
 
   btn.classList.add('active');
@@ -1190,18 +1257,18 @@ async function loadAdminUsers() {
     tbody.innerHTML = (data.users || []).map(u => `
       <tr>
         <td><strong>${escapeHtml(u.username)}</strong></td>
-        <td><span class="badge">${u.role.toUpperCase()}</span></td>
+        <td><span class="count-pill">${u.role.toUpperCase()}</span></td>
         <td>
-          <span class="badge ${u.active ? 'badge-success' : 'badge-danger'}">
+          <span class="variance-badge ${u.active ? '' : 'mismatch'}">
             ${u.active ? 'Active' : 'Disabled'}
           </span>
         </td>
-        <td><small>${u.createdAt || '-'}</small></td>
-        <td>
-          <button class="btn btn-sm btn-outline" onclick="toggleUserActive('${u.username}', ${!u.active})">
+        <td><small class="mono-font">${u.createdAt || '-'}</small></td>
+        <td class="text-center">
+          <button class="btn-outline-theme btn-sm" onclick="toggleUserActive('${u.username}', ${!u.active})">
             ${u.active ? 'Disable' : 'Enable'}
           </button>
-          <button class="btn btn-sm btn-outline" onclick="resetUserPasswordPrompt('${u.username}')">
+          <button class="btn-outline-theme btn-sm" onclick="resetUserPasswordPrompt('${u.username}')">
             Reset Password
           </button>
         </td>
@@ -1253,12 +1320,12 @@ async function loadAdminRates() {
   tbody.innerHTML = state.meta.rates.map(r => `
     <tr data-item="${escapeHtml(r.item)}">
       <td><strong>${escapeHtml(r.item)}</strong></td>
-      <td><span class="badge">${r.category}</span></td>
+      <td><span class="count-pill">${r.category}</span></td>
       <td>
-        <input type="number" class="form-control form-control-sm admin-rate-input" value="${r.rate}" step="0.01" style="width: 100px;">
+        <input type="number" class="form-control-premium mono-font admin-rate-input" value="${r.rate}" step="0.01" style="width: 110px; height: 36px;">
       </td>
-      <td>
-        <input type="checkbox" class="admin-rate-active" checked>
+      <td class="text-center">
+        <input type="checkbox" class="admin-rate-active" checked style="width: 18px; height: 18px;">
       </td>
     </tr>
   `).join('');
@@ -1348,7 +1415,7 @@ function hideToast() {
   if (toast) toast.classList.add('hidden');
 }
 
-function showSpinner(text = 'Processing...') {
+function showSpinner(text = 'Processing transaction...') {
   const overlay = document.getElementById('loadingOverlay');
   const txt = document.getElementById('loadingText');
   if (txt) txt.textContent = text;
