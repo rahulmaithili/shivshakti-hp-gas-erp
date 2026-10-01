@@ -482,41 +482,102 @@ function calculateEntryAmount() {
   const rate = parseFloat(document.getElementById('entryRate').value) || 0;
   const total = qty * rate;
   document.getElementById('entryAmount').value = total.toFixed(2);
-  updateSplitTotal();
+
+  // Auto-preset Cash if others are zero or empty
+  const upi = parseFloat(document.getElementById('settleUpi')?.value) || 0;
+  const hpPay = parseFloat(document.getElementById('settleHpPay')?.value) || 0;
+  const dues = parseFloat(document.getElementById('settleDues')?.value) || 0;
+  const other = parseFloat(document.getElementById('settleOther')?.value) || 0;
+
+  if (upi === 0 && hpPay === 0 && dues === 0 && other === 0) {
+    const cashEl = document.getElementById('settleCash');
+    if (cashEl) cashEl.value = total.toFixed(2);
+  }
+
+  validateSettlement();
 }
 
-function onPayModeChanged() {
-  const mode = document.getElementById('entryPayMode').value;
-  const splitBox = document.getElementById('splitPaymentContainer');
-  if (mode === 'SPLIT') {
-    splitBox.classList.remove('hidden');
-    updateSplitTotal();
-  } else {
-    splitBox.classList.add('hidden');
+function applyPresetSettlement(mode) {
+  const total = parseFloat(document.getElementById('entryAmount').value) || 0;
+
+  const cashEl = document.getElementById('settleCash');
+  const upiEl = document.getElementById('settleUpi');
+  const hpEl = document.getElementById('settleHpPay');
+  const duesEl = document.getElementById('settleDues');
+  const otherEl = document.getElementById('settleOther');
+
+  if (cashEl) cashEl.value = mode === 'CASH' ? total.toFixed(2) : '0';
+  if (upiEl) upiEl.value = mode === 'UPI' ? total.toFixed(2) : '0';
+  if (hpEl) hpEl.value = mode === 'HP_PAY' ? total.toFixed(2) : '0';
+  if (duesEl) duesEl.value = mode === 'DUES' ? total.toFixed(2) : '0';
+  if (otherEl) otherEl.value = mode === 'OTHER' ? total.toFixed(2) : '0';
+
+  if (mode === 'DUES') {
+    const partyEl = document.getElementById('entryParty');
+    if (partyEl && !partyEl.value.trim()) {
+      partyEl.focus();
+      showToast('Please specify Customer / Party name for Dues credit billing.', 'info');
+    }
   }
+
+  validateSettlement();
 }
 
-function updateSplitTotal() {
-  const mode = document.getElementById('entryPayMode').value;
-  if (mode !== 'SPLIT') return;
+function onSettlementInputChanged() {
+  validateSettlement();
+}
 
-  const totalAmount = parseFloat(document.getElementById('entryAmount').value) || 0;
-  const cash = parseFloat(document.getElementById('splitCash').value) || 0;
-  const upi = parseFloat(document.getElementById('splitUpi').value) || 0;
-  const hpPay = parseFloat(document.getElementById('splitHpPay').value) || 0;
-  const dues = parseFloat(document.getElementById('splitDues').value) || 0;
-  const other = parseFloat(document.getElementById('splitOther').value) || 0;
+function validateSettlement() {
+  const totalAmount = parseFloat(document.getElementById('entryAmount')?.value) || 0;
+  const cash = parseFloat(document.getElementById('settleCash')?.value) || 0;
+  const upi = parseFloat(document.getElementById('settleUpi')?.value) || 0;
+  const hpPay = parseFloat(document.getElementById('settleHpPay')?.value) || 0;
+  const dues = parseFloat(document.getElementById('settleDues')?.value) || 0;
+  const other = parseFloat(document.getElementById('settleOther')?.value) || 0;
 
-  const splitSum = cash + upi + hpPay + dues + other;
-  const msgEl = document.getElementById('splitValidationMsg');
+  const totalSettled = Math.round((cash + upi + hpPay + dues + other) * 100) / 100;
 
-  if (Math.abs(splitSum - totalAmount) < 0.01) {
-    msgEl.style.color = 'var(--c-green)';
-    msgEl.textContent = `✓ Balanced: Settled ${formatINR(splitSum)} of ${formatINR(totalAmount)}`;
-  } else {
-    msgEl.style.color = 'var(--c-rose)';
-    msgEl.textContent = `⚠️ Mismatch: Settled ${formatINR(splitSum)} / Required ${formatINR(totalAmount)} (Diff: ${formatINR(totalAmount - splitSum)})`;
+  const reqEl = document.getElementById('settleTotalRequired');
+  const givenEl = document.getElementById('settleTotalGiven');
+  const badgeEl = document.getElementById('settleStatusBadge');
+  const textEl = document.getElementById('settleStatusText');
+  const iconEl = badgeEl?.querySelector('.status-indicator');
+
+  if (reqEl) reqEl.textContent = formatINR(totalAmount);
+  if (givenEl) givenEl.textContent = formatINR(totalSettled);
+
+  const diff = Math.round((totalAmount - totalSettled) * 100) / 100;
+  const isBalanced = Math.abs(diff) < 0.01;
+
+  if (badgeEl && textEl) {
+    if (isBalanced) {
+      badgeEl.className = 'pos-settle-badge balanced';
+      if (iconEl) iconEl.textContent = '✓';
+      textEl.textContent = 'Balanced & Reconciled';
+    } else {
+      badgeEl.className = 'pos-settle-badge mismatch';
+      if (iconEl) iconEl.textContent = '⚠️';
+      if (diff > 0) {
+        textEl.textContent = `Short: ₹${diff.toFixed(2)} needed`;
+      } else {
+        textEl.textContent = `Excess: ₹${Math.abs(diff).toFixed(2)} over`;
+      }
+    }
   }
+
+  return {
+    isBalanced,
+    totalAmount,
+    totalSettled,
+    diff,
+    payments: {
+      CASH: cash,
+      UPI: upi,
+      HP_PAY: hpPay,
+      DUES: dues,
+      OTHER: other
+    }
+  };
 }
 
 async function handleEntrySubmit(e) {
@@ -535,7 +596,6 @@ async function submitEntryData(isAddAnother = false) {
   const qty = parseFloat(document.getElementById('entryQty').value) || 0;
   const rate = parseFloat(document.getElementById('entryRate').value) || 0;
   const amount = parseFloat(document.getElementById('entryAmount').value) || 0;
-  const payMode = document.getElementById('entryPayMode').value;
   const party = document.getElementById('entryParty').value.trim();
   const note = document.getElementById('entryNote').value.trim();
   const saveBtn = document.getElementById('btnSaveEntry');
@@ -549,19 +609,29 @@ async function submitEntryData(isAddAnother = false) {
     return;
   }
 
-  if (payMode === 'SPLIT') {
-    const cash = parseFloat(document.getElementById('splitCash').value) || 0;
-    const upi = parseFloat(document.getElementById('splitUpi').value) || 0;
-    const hpPay = parseFloat(document.getElementById('splitHpPay').value) || 0;
-    const dues = parseFloat(document.getElementById('splitDues').value) || 0;
-    const other = parseFloat(document.getElementById('splitOther').value) || 0;
-    const splitSum = cash + upi + hpPay + dues + other;
-
-    if (Math.abs(splitSum - amount) >= 0.01) {
-      showToast('Split settlement amounts must equal Total Bill Amount.', 'error');
-      return;
+  const settlement = validateSettlement();
+  if (!settlement.isBalanced) {
+    if (settlement.diff > 0) {
+      showToast(`Settlement mismatch: Please allocate ₹${settlement.diff.toFixed(2)} across payment modes.`, 'error');
+    } else {
+      showToast(`Settlement mismatch: Over-allocated by ₹${Math.abs(settlement.diff).toFixed(2)}.`, 'error');
     }
+    return;
   }
+
+  if (settlement.payments.DUES > 0 && !party) {
+    showToast('Customer / Party name is required when billing on Dues (credit account).', 'warning');
+    document.getElementById('entryParty').focus();
+    return;
+  }
+
+  // Determine primary mode for reference
+  let primaryMode = 'CASH';
+  if (settlement.payments.DUES > 0) primaryMode = 'DUES';
+  else if (settlement.payments.UPI > 0 && settlement.payments.CASH === 0) primaryMode = 'UPI';
+  else if (settlement.payments.HP_PAY > 0 && settlement.payments.CASH === 0) primaryMode = 'HP_PAY';
+  else if (settlement.payments.OTHER > 0 && settlement.payments.CASH === 0) primaryMode = 'OTHER';
+  else if (Object.values(settlement.payments).filter(v => v > 0).length > 1) primaryMode = 'SPLIT';
 
   saveBtn.disabled = true;
   saveBtn.innerHTML = '<span>Saving...</span>';
@@ -574,9 +644,10 @@ async function submitEntryData(isAddAnother = false) {
       qty: qty,
       rate: rate,
       amount: amount,
-      payMode: payMode,
+      payMode: primaryMode,
       party: party,
-      note: note
+      note: note,
+      payments: settlement.payments
     };
 
     await apiCall('addEntry', { entry: entryPayload });
@@ -603,7 +674,11 @@ async function submitEntryData(isAddAnother = false) {
 function resetEntryForm() {
   document.getElementById('entryForm').reset();
   document.getElementById('entryQty').value = '1';
-  document.getElementById('splitPaymentContainer').classList.add('hidden');
+  document.getElementById('settleCash').value = '0';
+  document.getElementById('settleUpi').value = '0';
+  document.getElementById('settleHpPay').value = '0';
+  document.getElementById('settleDues').value = '0';
+  document.getElementById('settleOther').value = '0';
   populateEntryItems();
 }
 

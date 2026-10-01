@@ -506,7 +506,6 @@ function handleAddEntry(entry, user) {
   const qty = Number(entry.qty) || 0;
   const rate = Number(entry.rate) || 0;
   const amount = Number(entry.amount !== undefined ? entry.amount : (qty * rate));
-  const payMode = (entry.payMode || 'CASH').trim();
   const party = (entry.party || '').trim();
   const note = (entry.note || '').trim();
 
@@ -515,25 +514,62 @@ function handleAddEntry(entry, user) {
     return errorResponse("Quantity must be greater than zero.");
   }
 
-  const id = Utilities.getUuid();
   const entrySheet = getSheet(SHEETS.ENTRY);
   if (!entrySheet) return errorResponse("ENTRY sheet does not exist.");
 
-  entrySheet.appendRow([
-    id, date, time, category, item, qty, rate, amount, payMode, party, note, user.username, false
-  ]);
+  const p = entry.payments || null;
+  const paymentList = [];
 
-  // If this entry was a DUE, automatically log to DUES table as well
-  if (payMode === 'DUES' && amount > 0) {
-    const duesSheet = getSheet(SHEETS.DUES);
-    if (duesSheet) {
-      duesSheet.appendRow([date, party || item, date, amount, 'PENDING', '']);
+  if (p && typeof p === 'object') {
+    const modes = ['CASH', 'UPI', 'HP_PAY', 'DUES', 'OTHER'];
+    let totalP = 0;
+    for (let m = 0; m < modes.length; m++) {
+      const modeKey = modes[m];
+      const val = Number(p[modeKey]) || 0;
+      if (val > 0) {
+        paymentList.push({ mode: modeKey, amount: val });
+        totalP += val;
+      }
+    }
+    if (paymentList.length > 0 && Math.abs(totalP - amount) > 0.05) {
+      return errorResponse(`Settlement total (₹${totalP.toFixed(2)}) must equal Total Bill Amount (₹${amount.toFixed(2)}).`);
     }
   }
 
-  logAudit(user.username, 'ADD_ENTRY', { id, item, qty, amount, payMode });
+  if (paymentList.length === 0) {
+    const singleMode = (entry.payMode || 'CASH').trim();
+    paymentList.push({ mode: singleMode, amount: amount });
+  }
 
-  return successResponse({ id: id, message: "Entry recorded successfully." });
+  const generatedIds = [];
+  const duesSheet = getSheet(SHEETS.DUES);
+
+  for (let i = 0; i < paymentList.length; i++) {
+    const pItem = paymentList[i];
+    const id = Utilities.getUuid();
+    generatedIds.push(id);
+
+    const pQty = (amount > 0 && paymentList.length > 1)
+      ? Number(((qty * pItem.amount) / amount).toFixed(4))
+      : qty;
+
+    const rowNote = paymentList.length > 1
+      ? (note ? `${note} [Split: ${pItem.mode} ₹${pItem.amount}]` : `[Split: ${pItem.mode} ₹${pItem.amount}]`)
+      : note;
+
+    entrySheet.appendRow([
+      id, date, time, category, item, pQty, rate, pItem.amount, pItem.mode, party, rowNote, user.username, false
+    ]);
+
+    if (pItem.mode === 'DUES' && pItem.amount > 0 && duesSheet) {
+      duesSheet.appendRow([date, party || item, date, pItem.amount, 'PENDING', '']);
+    }
+  }
+
+  setMasterReportDate(date);
+  logAudit(user.username, 'ADD_ENTRY', { ids: generatedIds, item, qty, amount, modes: paymentList.map(x => x.mode) });
+
+  return successResponse({ id: generatedIds[0], count: paymentList.length, message: "Entry recorded successfully." });
 }
 
 function handleUpdateEntry(entry, user) {
@@ -1503,7 +1539,13 @@ function setupFormulas() {
 
     // Cylinder Sales
     // Row 8: 19KG Commercial
+    reportSales.getRange('C8').setFormula(`=SUMIFS(ENTRY!F:F, ENTRY!B:B, '${vendorSheetName}'!$H$2, ENTRY!E:E, A8, ENTRY!D:D, "SALE", ENTRY!M:M, "<>TRUE")`);
     reportSales.getRange('D8').setFormula('=B8*C8');
+    reportSales.getRange('E8').setFormula(`=SUMIFS(ENTRY!H:H, ENTRY!B:B, '${vendorSheetName}'!$H$2, ENTRY!E:E, $A8, ENTRY!I:I, "CASH", ENTRY!M:M, "<>TRUE")`);
+    reportSales.getRange('F8').setFormula(`=SUMIFS(ENTRY!H:H, ENTRY!B:B, '${vendorSheetName}'!$H$2, ENTRY!E:E, $A8, ENTRY!I:I, "UPI", ENTRY!M:M, "<>TRUE")`);
+    reportSales.getRange('G8').setFormula(`=SUMIFS(ENTRY!H:H, ENTRY!B:B, '${vendorSheetName}'!$H$2, ENTRY!E:E, $A8, ENTRY!I:I, "HP_PAY", ENTRY!M:M, "<>TRUE")`);
+    reportSales.getRange('H8').setFormula(`=SUMIFS(ENTRY!H:H, ENTRY!B:B, '${vendorSheetName}'!$H$2, ENTRY!E:E, $A8, ENTRY!I:I, "DUES", ENTRY!M:M, "<>TRUE")`);
+    reportSales.getRange('I8').setFormula(`=SUMIFS(ENTRY!H:H, ENTRY!B:B, '${vendorSheetName}'!$H$2, ENTRY!E:E, $A8, ENTRY!I:I, "OTHER", ENTRY!M:M, "<>TRUE")+SUMIFS(ENTRY!H:H, ENTRY!B:B, '${vendorSheetName}'!$H$2, ENTRY!E:E, $A8, ENTRY!I:I, "NEFT", ENTRY!M:M, "<>TRUE")`);
     reportSales.getRange('J8').setFormula('=SUM(E8:I8)');
 
     // Row 9: 14.2KG Domestic (Godown)
@@ -1526,7 +1568,13 @@ function setupFormulas() {
 
     // Accessories rows (12 to 17)
     for (const r of [12, 13, 14, 15, 16, 17]) {
+      reportSales.getRange(`C${r}`).setFormula(`=SUMIFS(ENTRY!F:F, ENTRY!B:B, '${vendorSheetName}'!$H$2, ENTRY!E:E, A${r}, ENTRY!D:D, "SALE", ENTRY!M:M, "<>TRUE")`);
       reportSales.getRange(`D${r}`).setFormula(`=IF(OR(B${r}<>"",C${r}<>""), B${r}*C${r}, "")`);
+      reportSales.getRange(`E${r}`).setFormula(`=SUMIFS(ENTRY!H:H, ENTRY!B:B, '${vendorSheetName}'!$H$2, ENTRY!E:E, $A${r}, ENTRY!I:I, "CASH", ENTRY!M:M, "<>TRUE")`);
+      reportSales.getRange(`F${r}`).setFormula(`=SUMIFS(ENTRY!H:H, ENTRY!B:B, '${vendorSheetName}'!$H$2, ENTRY!E:E, $A${r}, ENTRY!I:I, "UPI", ENTRY!M:M, "<>TRUE")`);
+      reportSales.getRange(`G${r}`).setFormula(`=SUMIFS(ENTRY!H:H, ENTRY!B:B, '${vendorSheetName}'!$H$2, ENTRY!E:E, $A${r}, ENTRY!I:I, "HP_PAY", ENTRY!M:M, "<>TRUE")`);
+      reportSales.getRange(`H${r}`).setFormula(`=SUMIFS(ENTRY!H:H, ENTRY!B:B, '${vendorSheetName}'!$H$2, ENTRY!E:E, $A${r}, ENTRY!I:I, "DUES", ENTRY!M:M, "<>TRUE")`);
+      reportSales.getRange(`I${r}`).setFormula(`=SUMIFS(ENTRY!H:H, ENTRY!B:B, '${vendorSheetName}'!$H$2, ENTRY!E:E, $A${r}, ENTRY!I:I, "OTHER", ENTRY!M:M, "<>TRUE")+SUMIFS(ENTRY!H:H, ENTRY!B:B, '${vendorSheetName}'!$H$2, ENTRY!E:E, $A${r}, ENTRY!I:I, "NEFT", ENTRY!M:M, "<>TRUE")`);
       reportSales.getRange(`J${r}`).setFormula(`=IF(OR(B${r}<>"",C${r}<>"",COUNT(E${r}:I${r})>0), SUM(E${r}:I${r}), "")`);
     }
 
