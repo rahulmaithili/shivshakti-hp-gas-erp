@@ -1438,7 +1438,7 @@ function seedRatesIfEmpty() {
       ['Suraksha Hose Pipe', 'SALE', 190, true],
       ['Domestic Regulator (Leak/Defective)', 'SALE', 100, true],
       ['Domestic Pass Book', 'SALE', 59, true],
-      ['PMUY Pass Book', 'SALE', 50, true],
+      ['PMUY Pass Book', 'SALE', 25, true],
       ['5 Kg Nd Rfl', 'SALE', 845, true],
       ['Ftl Rgulator', 'SALE', 350, true],
       ['14.2KG Domestic (Defective / Leaking)', 'RETURN', 1042, true],
@@ -1589,7 +1589,17 @@ function setupFormulas() {
     reportSales.getRange('J18').setFormula('=SUM(J8:J10)+SUM(J12:J17)');
     reportSales.getRange('K18').setFormula('=IF(D18=J18, "RECONCILED ✓", "DIFF: ₹" & TEXT(D18-J18, "#,##0"))');
 
-    // Section 2: Returns (Row 24)
+    // Section 2: Returns (Rows 21 to 24)
+    for (const r of [21, 22, 23]) {
+      reportSales.getRange(`C${r}`).setFormula(`=SUMIFS(ENTRY!F:F, ENTRY!B:B, '${vendorSheetName}'!$H$2, ENTRY!E:E, A${r}, ENTRY!D:D, "RETURN", ENTRY!M:M, "<>TRUE")`);
+      reportSales.getRange(`D${r}`).setFormula(`=B${r}*C${r}`);
+      reportSales.getRange(`E${r}`).setFormula(`=SUMIFS(ENTRY!H:H, ENTRY!B:B, '${vendorSheetName}'!$H$2, ENTRY!E:E, $A${r}, ENTRY!I:I, "CASH", ENTRY!M:M, "<>TRUE")`);
+      reportSales.getRange(`F${r}`).setFormula(`=SUMIFS(ENTRY!H:H, ENTRY!B:B, '${vendorSheetName}'!$H$2, ENTRY!E:E, $A${r}, ENTRY!I:I, "UPI", ENTRY!M:M, "<>TRUE")`);
+      reportSales.getRange(`G${r}`).setFormula(`=SUMIFS(ENTRY!H:H, ENTRY!B:B, '${vendorSheetName}'!$H$2, ENTRY!E:E, $A${r}, ENTRY!I:I, "HP_PAY", ENTRY!M:M, "<>TRUE")`);
+      reportSales.getRange(`H${r}`).setFormula(`=SUMIFS(ENTRY!H:H, ENTRY!B:B, '${vendorSheetName}'!$H$2, ENTRY!E:E, $A${r}, ENTRY!I:I, "DUES", ENTRY!M:M, "<>TRUE")`);
+      reportSales.getRange(`I${r}`).setFormula(`=SUMIFS(ENTRY!H:H, ENTRY!B:B, '${vendorSheetName}'!$H$2, ENTRY!E:E, $A${r}, ENTRY!I:I, "OTHER", ENTRY!M:M, "<>TRUE")+SUMIFS(ENTRY!H:H, ENTRY!B:B, '${vendorSheetName}'!$H$2, ENTRY!E:E, $A${r}, ENTRY!I:I, "NEFT", ENTRY!M:M, "<>TRUE")`);
+      reportSales.getRange(`J${r}`).setFormula(`=SUM(E${r}:I${r})`);
+    }
     reportSales.getRange('C24').setFormula('=SUM(C21:C23)');
     reportSales.getRange('D24').setFormula('=SUM(D21:D23)');
     reportSales.getRange('E24').setFormula('=SUM(E21:E23)');
@@ -1600,7 +1610,15 @@ function setupFormulas() {
     reportSales.getRange('J24').setFormula('=SUM(J21:J23)');
     reportSales.getRange('K24').setFormula('=IF(D24=J24, "RECONCILED ✓", "DIFF: ₹" & TEXT(D24-J24, "#,##0"))');
 
-    // Section 3: Security Deposits (Row 33)
+    // Section 3: Security Deposits (Rows 27 to 33)
+    for (const r of [27, 28, 29, 30, 31, 32]) {
+      reportSales.getRange(`D${r}`).setFormula(`=SUMIFS(ENTRY!F:F, ENTRY!B:B, '${vendorSheetName}'!$H$2, ENTRY!E:E, A${r}, ENTRY!D:D, "SECURITY_DEPOSIT", ENTRY!M:M, "<>TRUE")`);
+      reportSales.getRange(`F${r}`).setFormula(`=IF(OR(D${r}<>"",E${r}<>""), D${r}*E${r}, "")`);
+      reportSales.getRange(`G${r}`).setFormula(`=SUMIFS(ENTRY!H:H, ENTRY!B:B, '${vendorSheetName}'!$H$2, ENTRY!E:E, $A${r}, ENTRY!I:I, "CASH", ENTRY!M:M, "<>TRUE")`);
+      reportSales.getRange(`H${r}`).setFormula(`=SUMIFS(ENTRY!H:H, ENTRY!B:B, '${vendorSheetName}'!$H$2, ENTRY!E:E, $A${r}, ENTRY!I:I, "UPI", ENTRY!M:M, "<>TRUE")`);
+      reportSales.getRange(`I${r}`).setFormula(`=SUMIFS(ENTRY!H:H, ENTRY!B:B, '${vendorSheetName}'!$H$2, ENTRY!E:E, $A${r}, ENTRY!I:I, "NEFT", ENTRY!M:M, "<>TRUE")+SUMIFS(ENTRY!H:H, ENTRY!B:B, '${vendorSheetName}'!$H$2, ENTRY!E:E, $A${r}, ENTRY!I:I, "OTHER", ENTRY!M:M, "<>TRUE")`);
+      reportSales.getRange(`J${r}`).setFormula(`=IF(OR(G${r}<>"",H${r}<>"",I${r}<>""), SUM(G${r}:I${r}), "")`);
+    }
     reportSales.getRange('D33').setFormula('=SUM(D27:D32)');
     reportSales.getRange('F33').setFormula('=SUM(F27:F32)');
     reportSales.getRange('G33').setFormula('=SUM(G27:G32)');
@@ -1608,7 +1626,15 @@ function setupFormulas() {
     reportSales.getRange('I33').setFormula('=SUM(I27:I32)');
     reportSales.getRange('J33').setFormula('=SUM(J27:J32)');
 
-    // Section 5: Refunds (Row 43)
+    // Section 5: Refunds (Rows 40 to 43)
+    for (const r of [40, 41, 42]) {
+      reportSales.getRange(`D${r}`).setFormula(`=SUMIFS(ENTRY!F:F, ENTRY!B:B, '${vendorSheetName}'!$H$2, ENTRY!E:E, A${r}, ENTRY!D:D, "SD_REFUND", ENTRY!M:M, "<>TRUE")`);
+      reportSales.getRange(`F${r}`).setFormula(`=IF(OR(D${r}<>"",E${r}<>""), D${r}*E${r}, "")`);
+      reportSales.getRange(`G${r}`).setFormula(`=SUMIFS(ENTRY!H:H, ENTRY!B:B, '${vendorSheetName}'!$H$2, ENTRY!E:E, $A${r}, ENTRY!I:I, "CASH", ENTRY!M:M, "<>TRUE")`);
+      reportSales.getRange(`H${r}`).setFormula(`=SUMIFS(ENTRY!H:H, ENTRY!B:B, '${vendorSheetName}'!$H$2, ENTRY!E:E, $A${r}, ENTRY!I:I, "UPI", ENTRY!M:M, "<>TRUE")`);
+      reportSales.getRange(`I${r}`).setFormula(`=SUMIFS(ENTRY!H:H, ENTRY!B:B, '${vendorSheetName}'!$H$2, ENTRY!E:E, $A${r}, ENTRY!I:I, "NEFT", ENTRY!M:M, "<>TRUE")+SUMIFS(ENTRY!H:H, ENTRY!B:B, '${vendorSheetName}'!$H$2, ENTRY!E:E, $A${r}, ENTRY!I:I, "OTHER", ENTRY!M:M, "<>TRUE")`);
+      reportSales.getRange(`J${r}`).setFormula(`=IF(OR(G${r}<>"",H${r}<>"",I${r}<>""), SUM(G${r}:I${r}), "")`);
+    }
     reportSales.getRange('D43').setFormula('=SUM(D40:D42)');
     reportSales.getRange('F43').setFormula('=SUM(F40:F42)');
     reportSales.getRange('G43').setFormula('=SUM(G40:G42)');
@@ -1616,7 +1642,15 @@ function setupFormulas() {
     reportSales.getRange('I43').setFormula('=SUM(I40:I42)');
     reportSales.getRange('J43').setFormula('=SUM(J40:J42)');
 
-    // Section 6: Service Charges (Row 51)
+    // Section 6: Service Charges (Rows 46 to 51)
+    for (const r of [46, 47, 48, 49, 50]) {
+      reportSales.getRange(`C${r}`).setFormula(`=SUMIFS(ENTRY!F:F, ENTRY!B:B, '${vendorSheetName}'!$H$2, ENTRY!E:E, A${r}, ENTRY!D:D, "SERVICE", ENTRY!M:M, "<>TRUE")`);
+      reportSales.getRange(`D${r}`).setFormula(`=IF(OR(B${r}<>"",C${r}<>""), B${r}*C${r}, "")`);
+      reportSales.getRange(`E${r}`).setFormula(`=SUMIFS(ENTRY!H:H, ENTRY!B:B, '${vendorSheetName}'!$H$2, ENTRY!E:E, $A${r}, ENTRY!I:I, "CASH", ENTRY!M:M, "<>TRUE")`);
+      reportSales.getRange(`F${r}`).setFormula(`=SUMIFS(ENTRY!H:H, ENTRY!B:B, '${vendorSheetName}'!$H$2, ENTRY!E:E, $A${r}, ENTRY!I:I, "UPI", ENTRY!M:M, "<>TRUE")`);
+      reportSales.getRange(`G${r}`).setFormula(`=SUMIFS(ENTRY!H:H, ENTRY!B:B, '${vendorSheetName}'!$H$2, ENTRY!E:E, $A${r}, ENTRY!I:I, "NEFT", ENTRY!M:M, "<>TRUE")+SUMIFS(ENTRY!H:H, ENTRY!B:B, '${vendorSheetName}'!$H$2, ENTRY!E:E, $A${r}, ENTRY!I:I, "OTHER", ENTRY!M:M, "<>TRUE")`);
+      reportSales.getRange(`J${r}`).setFormula(`=IF(OR(E${r}<>"",F${r}<>"",G${r}<>""), SUM(E${r}:G${r}), "")`);
+    }
     reportSales.getRange('C51').setFormula('=SUM(C46:C50)');
     reportSales.getRange('D51').setFormula('=SUM(D46:D50)');
     reportSales.getRange('E51').setFormula('=SUM(E46:E50)');
@@ -1634,7 +1668,12 @@ function setupFormulas() {
     reportSales.getRange('J53').setFormula('=E53+F53+G53+H53+I53');
     reportSales.getRange('K53').setFormula('=IF(D53=J53, "BALANCED ✓", "DIFF: ₹" & TEXT(D53-J53, "#,##0"))');
 
-    // Section 8: Dues Recovered (Row 59)
+    // Section 8: Dues Recovered (Rows 56 to 59)
+    reportSales.getRange('D56').setFormula(`=SUMIFS(ENTRY!H:H, ENTRY!B:B, '${vendorSheetName}'!$H$2, ENTRY!D:D, "DUES_RECEIVED", ENTRY!M:M, "<>TRUE")`);
+    reportSales.getRange('E56').setFormula(`=SUMIFS(ENTRY!H:H, ENTRY!B:B, '${vendorSheetName}'!$H$2, ENTRY!D:D, "DUES_RECEIVED", ENTRY!I:I, "CASH", ENTRY!M:M, "<>TRUE")`);
+    reportSales.getRange('F56').setFormula(`=SUMIFS(ENTRY!H:H, ENTRY!B:B, '${vendorSheetName}'!$H$2, ENTRY!D:D, "DUES_RECEIVED", ENTRY!I:I, "UPI", ENTRY!M:M, "<>TRUE")`);
+    reportSales.getRange('G56').setFormula(`=SUMIFS(ENTRY!H:H, ENTRY!B:B, '${vendorSheetName}'!$H$2, ENTRY!D:D, "DUES_RECEIVED", ENTRY!I:I, "NEFT", ENTRY!M:M, "<>TRUE")+SUMIFS(ENTRY!H:H, ENTRY!B:B, '${vendorSheetName}'!$H$2, ENTRY!D:D, "DUES_RECEIVED", ENTRY!I:I, "OTHER", ENTRY!M:M, "<>TRUE")`);
+    reportSales.getRange('J56').setFormula('=SUM(E56:G56)');
     reportSales.getRange('D59').setFormula('=SUM(D56:D58)');
     reportSales.getRange('E59').setFormula('=SUM(E56:E58)');
     reportSales.getRange('F59').setFormula('=SUM(F56:F58)');
