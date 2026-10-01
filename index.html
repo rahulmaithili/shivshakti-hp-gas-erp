@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Shiv Shakti HP Gas Agency - Rojnamcha</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Global Toast / Banner Notification -->
+  <div id="toastNotification" class="toast hidden">
+    <span id="toastIcon" class="toast-icon"></span>
+    <span id="toastMessage" class="toast-message"></span>
+    <button class="toast-close" onclick="hideToast()">&times;</button>
+  </div>
+
+  <!-- Global Loading Spinner Overlay -->
+  <div id="loadingOverlay" class="loading-overlay hidden">
+    <div class="spinner"></div>
+    <div id="loadingText" class="loading-text">Processing...</div>
+  </div>
+
+  <!-- Top Application Header -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="agency-logo-mark">HP</div>
+      <div>
+        <h1 class="agency-title">SHIV SHAKTI HP GAS</h1>
+        <div class="agency-subtitle">Pandaul Branch • Daily Rojnamcha</div>
+      </div>
+    </div>
+    <div class="header-right" id="headerAuthActions" style="display: none;">
+      <div class="user-chip">
+        <span id="headerUserBadge" class="user-name">User</span>
+        <span id="headerRoleBadge" class="role-tag">CASHIER</span>
+      </div>
+      <button class="icon-btn" id="btnConfigApi" title="API Settings" onclick="openApiConfigModal()">⚙️</button>
+      <button class="icon-btn logout-btn" id="btnLogout" title="Logout" onclick="handleLogoutClick()">🚪</button>
+    </div>
+  </header>
+
+  <!-- Main Screens Container -->
+  <main class="main-content">
+
+    <!-- 1. LOGIN SCREEN -->
+    <section id="screen-login" class="screen active">
+      <div class="login-card">
+        <div class="login-brand">
+          <div class="brand-badge">HP GAS</div>
+          <h2>Agency Login</h2>
+          <p class="hindi-hint">दैनिक रोज़नामचा प्रणाली में लॉगिन करें</p>
+        </div>
+        <form id="loginForm" onsubmit="handleLoginSubmit(event)">
+          <div class="form-group">
+            <label for="loginUsername">Username [यूज़रनेम]</label>
+            <input type="text" id="loginUsername" class="form-control" placeholder="Enter username (e.g. admin)" required autocomplete="username">
+          </div>
+          <div class="form-group">
+            <label for="loginPassword">Password [पासवर्ड]</label>
+            <input type="password" id="loginPassword" class="form-control" placeholder="Enter password" required autocomplete="current-password">
+          </div>
+          <button type="submit" id="btnLoginSubmit" class="btn btn-primary btn-block">
+            Secure Login [लॉगिन करें]
+          </button>
+        </form>
+        <div class="login-footer">
+          <small>Protected by 12-hour encrypted token & salted SHA-256 hash.</small>
+          <div class="login-settings-link">
+            <a href="javascript:void(0)" onclick="openApiConfigModal()">Configure Apps Script Web App URL</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. TODAY DASHBOARD SCREEN -->
+    <section id="screen-dashboard" class="screen">
+      <div class="section-header">
+        <div>
+          <h2>Daily Overview [दैनिक विवरण]</h2>
+          <p class="subtitle">Live financial & stock KPIs for selected date</p>
+        </div>
+        <div class="date-picker-wrap">
+          <label for="globalDatePicker" class="small-label">Report Date [तारीख]</label>
+          <input type="date" id="globalDatePicker" class="form-control form-control-sm" onchange="onDateChanged()">
+        </div>
+      </div>
+
+      <!-- Live Reconciliation Status Banner -->
+      <div id="reconciliationBanner" class="status-banner balanced">
+        <div class="banner-status">
+          <span class="status-icon" id="reconIcon">✓</span>
+          <div>
+            <strong id="reconStatusTitle">All Accounts Balanced</strong>
+            <div id="reconStatusDetail" class="subtext">Inflows equal outflows & payments reconcile with billing.</div>
+          </div>
+        </div>
+        <button class="btn btn-sm btn-outline" onclick="loadDashboardData()">Refresh [रीफ्रेश]</button>
+      </div>
+
+      <!-- KPI Grid Cards -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">TOTAL BILLING [कुल बिलिंग]</div>
+          <div class="kpi-value text-primary" id="kpiTotalBilling">₹0.00</div>
+          <div class="kpi-foot">Gross Sales + Recovered Dues</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">NET CASH INFLOW [कुल नकद]</div>
+          <div class="kpi-value text-success" id="kpiNetCash">₹0.00</div>
+          <div class="kpi-foot">Counter & Delivery Physical Cash</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">DIGITAL SETTLEMENT [डिजिटल संग्रह]</div>
+          <div class="kpi-value text-info" id="kpiDigital">₹0.00</div>
+          <div class="kpi-foot">UPI + HP Pay + Bank Transfer</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">OUTSTANDING DUES [बकाया राशि]</div>
+          <div class="kpi-value text-warning" id="kpiDues">₹0.00</div>
+          <div class="kpi-foot">Today's Uncollected Dues</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">CYLINDERS SOLD [कुल सिलेंडर बिक्री]</div>
+          <div class="kpi-value text-accent" id="kpiCylinders">0 Pcs</div>
+          <div class="kpi-foot">Delivery (374) + Godown (257)</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">CLOSING CASH [अंतिम रोकड़]</div>
+          <div class="kpi-value" id="kpiClosingCash">₹0.00</div>
+          <div class="kpi-foot">Cash in Till at End of Day</div>
+        </div>
+      </div>
+
+      <!-- Quick Action Buttons -->
+      <div class="quick-actions-bar">
+        <button class="btn btn-secondary" onclick="switchTab('screen-entry')">➕ Add New Bill Entry</button>
+        <button class="btn btn-secondary" onclick="switchTab('screen-cashbook')">💵 Cash Book & Notes</button>
+        <button class="btn btn-secondary" onclick="switchTab('screen-vendors')">🚚 Vendor Reconciliation</button>
+        <button class="btn btn-primary" onclick="switchTab('screen-report')">📄 View Full Daily Report</button>
+      </div>
+    </section>
+
+    <!-- 3. ADD ENTRY & TODAY ENTRIES SCREEN -->
+    <section id="screen-entry" class="screen">
+      <div class="section-header">
+        <div>
+          <h2>Billing & Transaction Entry [बिक्री व खर्च प्रविष्टि]</h2>
+          <p class="subtitle">Enter sales, returns, security deposits, services or dues</p>
+        </div>
+      </div>
+
+      <div class="card form-card">
+        <form id="entryForm" onsubmit="handleEntrySubmit(event)">
+          <div class="form-row">
+            <div class="form-group col-md-4">
+              <label for="entryCategory">Category [श्रेणी]</label>
+              <select id="entryCategory" class="form-control" onchange="onCategoryChanged()" required>
+                <option value="SALE">SALE [बिक्री]</option>
+                <option value="RETURN">RETURN [वापसी/बदलाव]</option>
+                <option value="SECURITY_DEPOSIT">SECURITY DEPOSIT [सिक्योरिटी जमा]</option>
+                <option value="SD_REFUND">SD REFUND [सिक्योरिटी वापसी]</option>
+                <option value="SERVICE">SERVICE [सेवा शुल्क/अन्य]</option>
+                <option value="DUES_RECEIVED">DUES RECEIVED [पिछला बकाया प्राप्त]</option>
+              </select>
+            </div>
+            <div class="form-group col-md-5">
+              <label for="entryItem">Item / Particulars [वस्तु / विवरण]</label>
+              <select id="entryItem" class="form-control" onchange="onItemChanged()" required>
+                <option value="">-- Select Item --</option>
+              </select>
+            </div>
+            <div class="form-group col-md-3">
+              <label for="entryRate">Rate [दर] (₹)</label>
+              <input type="number" id="entryRate" class="form-control" step="0.01" inputmode="decimal" oninput="calculateEntryAmount()" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group col-md-3">
+              <label for="entryQty">Quantity [मात्रा]</label>
+              <input type="number" id="entryQty" class="form-control" value="1" min="1" inputmode="numeric" oninput="calculateEntryAmount()" required>
+            </div>
+            <div class="form-group col-md-4">
+              <label for="entryAmount">Total Bill Amount [कुल राशि] (₹)</label>
+              <input type="number" id="entryAmount" class="form-control font-weight-bold" step="0.01" inputmode="decimal" readonly>
+            </div>
+            <div class="form-group col-md-5">
+              <label for="entryPayMode">Payment Mode [भुगतान प्रकार]</label>
+              <select id="entryPayMode" class="form-control" onchange="onPayModeChanged()" required>
+                <option value="CASH">CASH [नकद]</option>
+                <option value="UPI">UPI [ऑनलाइन / क्यूआर]</option>
+                <option value="HP_PAY">HP PAY [एचपी पे]</option>
+                <option value="DUES">DUES [बकाया]</option>
+                <option value="NEFT">NEFT / RTGS [बैंक ट्रांसफर]</option>
+                <option value="SPLIT">SPLIT PAYMENT [मिश्रित भुगतान]</option>
+                <option value="OTHER">OTHER [अन्य]</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Split Payment Container (Appears when SPLIT is selected) -->
+          <div id="splitPaymentContainer" class="split-box hidden">
+            <h4>Split Payment Settlement [मिश्रित भुगतान विवरण]</h4>
+            <div class="form-row">
+              <div class="form-group col-4">
+                <label>Cash (₹)</label>
+                <input type="number" id="splitCash" class="form-control" value="0" min="0" step="0.01" inputmode="decimal" oninput="updateSplitTotal()">
+              </div>
+              <div class="form-group col-4">
+                <label>UPI (₹)</label>
+                <input type="number" id="splitUpi" class="form-control" value="0" min="0" step="0.01" inputmode="decimal" oninput="updateSplitTotal()">
+              </div>
+              <div class="form-group col-4">
+                <label>HP Pay (₹)</label>
+                <input type="number" id="splitHpPay" class="form-control" value="0" min="0" step="0.01" inputmode="decimal" oninput="updateSplitTotal()">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group col-6">
+                <label>Dues (₹)</label>
+                <input type="number" id="splitDues" class="form-control" value="0" min="0" step="0.01" inputmode="decimal" oninput="updateSplitTotal()">
+              </div>
+              <div class="form-group col-6">
+                <label>Other / NEFT (₹)</label>
+                <input type="number" id="splitOther" class="form-control" value="0" min="0" step="0.01" inputmode="decimal" oninput="updateSplitTotal()">
+              </div>
+            </div>
+            <div class="split-validation" id="splitValidationMsg">
+              Settled: ₹0.00 / Required: ₹0.00
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group col-md-6">
+              <label for="entryParty">Customer / Party / Vendor Name [ग्राहक / पार्टी]</label>
+              <input type="text" id="entryParty" class="form-control" placeholder="Optional party name">
+            </div>
+            <div class="form-group col-md-6">
+              <label for="entryNote">Voucher / Remark / Note [टिप्पणी]</label>
+              <input type="text" id="entryNote" class="form-control" placeholder="e.g. Delivery memo / customer note">
+            </div>
+          </div>
+
+          <div class="btn-group-actions">
+            <button type="submit" id="btnSaveEntry" class="btn btn-primary">Save Entry [सेव करें]</button>
+            <button type="button" class="btn btn-secondary" onclick="saveAndAddAnother(event)">Save & Add Another [सेव कर दूसरा जोड़ें]</button>
+            <button type="button" class="btn btn-outline" onclick="resetEntryForm()">Reset</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Today's Entries Table -->
+      <div class="section-subhead mt-4">
+        <h3>Today's Entries List [आज की सभी प्रविष्टियां]</h3>
+        <span class="badge" id="entriesCountBadge">0 entries</span>
+      </div>
+      <div class="table-responsive">
+        <table class="table" id="entriesTable">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Category</th>
+              <th>Item</th>
+              <th>Qty</th>
+              <th>Rate</th>
+              <th>Amount</th>
+              <th>Mode</th>
+              <th>Party</th>
+              <th>By</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="entriesTableBody">
+            <tr>
+              <td colspan="10" class="text-center text-muted">No entries recorded for this date.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 4. VENDORS RECONCILIATION SCREEN -->
+    <section id="screen-vendors" class="screen">
+      <div class="section-header">
+        <div>
+          <h2>Delivery Vendors & Godown [हॉकर्स व गोदाम संग्रह]</h2>
+          <p class="subtitle">Quickly input cylinders issued and collection breakdown</p>
+        </div>
+        <button class="btn btn-primary" onclick="saveVendorLogData()">Save Vendor Logs [सुरक्षित करें]</button>
+      </div>
+
+      <!-- Vendor Totals Summary Card -->
+      <div class="vendor-summary-cards">
+        <div class="summary-pill">
+          <span>Home Delivery Total:</span>
+          <strong id="vendorSumDelivery">0 Cylinders</strong>
+        </div>
+        <div class="summary-pill">
+          <span>Godown Counter Total:</span>
+          <strong id="vendorSumGodown">0 Cylinders</strong>
+        </div>
+        <div class="summary-pill highlight">
+          <span>Grand Total Gas:</span>
+          <strong id="vendorSumGrand">0 Cylinders</strong>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-bordered vendor-table" id="vendorLogTable">
+          <thead>
+            <tr>
+              <th style="width: 50px;">S.N.</th>
+              <th>Vendor Name [हॉकर का नाम]</th>
+              <th>Total Gas Given [कुल सिलेंडर]</th>
+              <th>Cash [नकद]</th>
+              <th>UPI [ऑनलाइन]</th>
+              <th>HP Pay</th>
+              <th>Dues [बकाया]</th>
+              <th>Reconciliation Status</th>
+            </tr>
+          </thead>
+          <tbody id="vendorTableBody">
+            <!-- Dynamic Vendor Rows -->
+          </tbody>
+          <tfoot id="vendorTableFoot">
+            <!-- Delivery Total, Godown, Grand Total Rows -->
+          </tfoot>
+        </table>
+      </div>
+    </section>
+
+    <!-- 5. CASH BOOK SCREEN -->
+    <section id="screen-cashbook" class="screen">
+      <div class="section-header">
+        <div>
+          <h2>Daily Cash Book & Notes Counter [दैनिक रोकड़ बही व नोट गणना]</h2>
+          <p class="subtitle">Opening balance, outflows, and physical denomination reconciliation</p>
+        </div>
+        <button class="btn btn-primary" onclick="saveCashbookData()">Save Cash Book [रोकड़ बही सुरक्षित करें]</button>
+      </div>
+
+      <div class="grid-2-col">
+        <!-- Left: Receipts & Payments (Inflow & Outflow) -->
+        <div class="card">
+          <h3 class="card-title">Receipts & Payments [आवक व जावक]</h3>
+          <div class="form-group">
+            <label>Opening Cash Balance [प्रारंभिक नकद शेष] (₹)</label>
+            <input type="number" id="cbOpeningCash" class="form-control" step="0.01" inputmode="decimal" oninput="calculateCashBook()">
+            <small class="text-muted">Auto-fetched from previous day's closing cash.</small>
+          </div>
+          <div class="form-group">
+            <label>Cash Received from Sales [बिक्री से नकद] (₹)</label>
+            <input type="number" id="cbCashFromSales" class="form-control font-weight-bold" readonly>
+          </div>
+          <hr>
+          <h4 class="subheading">Payments / Outflow Particulars [खर्च व स्थानांतरण]</h4>
+          <div class="form-group">
+            <label>Bank Deposit at Pandual [बैंक में जमा] (₹)</label>
+            <input type="number" id="cbBankDeposit" class="form-control" step="0.01" inputmode="decimal" oninput="calculateCashBook()">
+          </div>
+          <div class="form-group">
+            <label>Cash Sent to Madhubani [मधुबनी भेजा गया] (₹)</label>
+            <input type="number" id="cbCashMadhubani" class="form-control" step="0.01" inputmode="decimal" oninput="calculateCashBook()">
+          </div>
+          <div class="form-group">
+            <label>Cash Tfr Thakur Ji [ठाकुर जी स्थानांतरण] (₹)</label>
+            <input type="number" id="cbCashThakurJi" class="form-control" step="0.01" inputmode="decimal" oninput="calculateCashBook()">
+          </div>
+          <div class="form-group">
+            <label>Petty Cash & Misc Expenses [विविध खर्च] (₹)</label>
+            <input type="number" id="cbPettyExpenses" class="form-control" step="0.01" inputmode="decimal" oninput="calculateCashBook()">
+          </div>
+
+          <div class="cashbook-summary-box">
+            <div class="d-flex justify-between">
+              <span>Total Inflows & Opening:</span>
+              <strong id="cbTotalInflow">₹0.00</strong>
+            </div>
+            <div class="d-flex justify-between">
+              <span>Total Outflow (before closing):</span>
+              <strong id="cbTotalOutflowBefore">₹0.00</strong>
+            </div>
+            <div class="d-flex justify-between highlight-row">
+              <span>Computed Book Closing Balance:</span>
+              <strong id="cbComputedClosing">₹0.00</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Physical Cash Denomination & Reconciliation -->
+        <div class="card">
+          <div class="d-flex justify-between align-center">
+            <h3 class="card-title">Physical Denomination [भौतिक नोट गणना]</h3>
+            <span class="badge" id="denomVarianceBadge">Variance: ₹0.00</span>
+          </div>
+
+          <table class="table table-sm denomination-table">
+            <thead>
+              <tr>
+                <th>Note / Coin</th>
+                <th style="width: 100px;">Count (Pcs)</th>
+                <th style="text-align: right;">Value (₹)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>₹ 500 Note</td>
+                <td><input type="number" id="note500" class="form-control form-control-sm text-center" min="0" inputmode="numeric" oninput="calculateDenominations()"></td>
+                <td class="text-right" id="val500">₹0.00</td>
+              </tr>
+              <tr>
+                <td>₹ 200 Note</td>
+                <td><input type="number" id="note200" class="form-control form-control-sm text-center" min="0" inputmode="numeric" oninput="calculateDenominations()"></td>
+                <td class="text-right" id="val200">₹0.00</td>
+              </tr>
+              <tr>
+                <td>₹ 100 Note</td>
+                <td><input type="number" id="note100" class="form-control form-control-sm text-center" min="0" inputmode="numeric" oninput="calculateDenominations()"></td>
+                <td class="text-right" id="val100">₹0.00</td>
+              </tr>
+              <tr>
+                <td>₹ 50 Note</td>
+                <td><input type="number" id="note50" class="form-control form-control-sm text-center" min="0" inputmode="numeric" oninput="calculateDenominations()"></td>
+                <td class="text-right" id="val50">₹0.00</td>
+              </tr>
+              <tr>
+                <td>₹ 20 Note</td>
+                <td><input type="number" id="note20" class="form-control form-control-sm text-center" min="0" inputmode="numeric" oninput="calculateDenominations()"></td>
+                <td class="text-right" id="val20">₹0.00</td>
+              </tr>
+              <tr>
+                <td>₹ 10 Note</td>
+                <td><input type="number" id="note10" class="form-control form-control-sm text-center" min="0" inputmode="numeric" oninput="calculateDenominations()"></td>
+                <td class="text-right" id="val10">₹0.00</td>
+              </tr>
+              <tr>
+                <td>₹ 5 Coin/Note</td>
+                <td><input type="number" id="note5" class="form-control form-control-sm text-center" min="0" inputmode="numeric" oninput="calculateDenominations()"></td>
+                <td class="text-right" id="val5">₹0.00</td>
+              </tr>
+              <tr>
+                <td>₹ 2 Coin/Note</td>
+                <td><input type="number" id="note2" class="form-control form-control-sm text-center" min="0" inputmode="numeric" oninput="calculateDenominations()"></td>
+                <td class="text-right" id="val2">₹0.00</td>
+              </tr>
+              <tr>
+                <td>₹ 1 Coin/Note</td>
+                <td><input type="number" id="note1" class="form-control form-control-sm text-center" min="0" inputmode="numeric" oninput="calculateDenominations()"></td>
+                <td class="text-right" id="val1">₹0.00</td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr>
+                <th>Total Physical Cash:</th>
+                <th id="totalNotesCount" class="text-center">0 Pcs</th>
+                <th id="totalPhysicalVal" class="text-right font-weight-bold text-success">₹0.00</th>
+              </tr>
+            </tfoot>
+          </table>
+
+          <div class="reconciliation-verdict" id="denomVerdictBox">
+            <span id="denomVerdictIcon">✓</span>
+            <span id="denomVerdictText">Physical cash matches book closing balance perfectly.</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. DUES MANAGEMENT SCREEN -->
+    <section id="screen-dues" class="screen">
+      <div class="section-header">
+        <div>
+          <h2>Outstanding Dues & Recoveries [बकाया खाता]</h2>
+          <p class="subtitle">Track credit balances and record payments</p>
+        </div>
+        <button class="btn btn-primary" onclick="openAddDueModal()">➕ Add New Due [बकाया जोड़ें]</button>
+      </div>
+
+      <div class="filter-tabs">
+        <button class="filter-btn active" onclick="filterDuesTable('PENDING', this)">Pending Dues [बाकी]</button>
+        <button class="filter-btn" onclick="filterDuesTable('RECOVERED', this)">Recovered [प्राप्त]</button>
+        <button class="filter-btn" onclick="filterDuesTable('ALL', this)">All Records [सभी]</button>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table" id="duesTable">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Party / Customer Name</th>
+              <th>Bill Date</th>
+              <th>Amount (₹)</th>
+              <th>Status</th>
+              <th>Recovered Date</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="duesTableBody">
+            <tr>
+              <td colspan="7" class="text-center text-muted">Loading dues register...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 7. STOCK MANAGEMENT SCREEN -->
+    <section id="screen-stock" class="screen">
+      <div class="section-header">
+        <div>
+          <h2>Daily Cylinder Stock Balance [सिलेंडर स्टॉक विवरण]</h2>
+          <p class="subtitle">Opening, HPCL receipts, delivered, and empty returns</p>
+        </div>
+        <button class="btn btn-primary" onclick="saveStockData()">Save Stock [स्टॉक सुरक्षित करें]</button>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table table-bordered stock-table" id="stockTable">
+          <thead>
+            <tr>
+              <th rowspan="2">Cylinder Type</th>
+              <th colspan="5">FILLED STOCK [भरा हुआ स्टॉक]</th>
+              <th colspan="5">EMPTY STOCK [खाली स्टॉक]</th>
+            </tr>
+            <tr>
+              <th>Opening</th>
+              <th>From HPCL</th>
+              <th>Sold / Delivered</th>
+              <th>Adj.</th>
+              <th>Closing Filled</th>
+              <th>Opening Empty</th>
+              <th>From Customer</th>
+              <th>Other Returned</th>
+              <th>Sent to Plant</th>
+              <th>Closing Empty</th>
+            </tr>
+          </thead>
+          <tbody id="stockTableBody">
+            <!-- 5 cylinder types -->
+          </tbody>
+          <tfoot id="stockTableFoot">
+            <!-- Computed Totals -->
+          </tfoot>
+        </table>
+      </div>
+    </section>
+
+    <!-- 8. REPORT PREVIEW SCREEN -->
+    <section id="screen-report" class="screen">
+      <div class="section-header">
+        <div>
+          <h2>Official Daily Report Preview [दैनिक रिपोर्ट प्रारूप]</h2>
+          <p class="subtitle">Exact layout matching the agency master spreadsheet</p>
+        </div>
+        <div class="action-btn-group">
+          <button class="btn btn-secondary" onclick="generateDailyArchive()">📥 Generate PDF & Excel</button>
+          <button class="btn btn-primary" onclick="printReport()">🖨️ Print Report</button>
+        </div>
+      </div>
+
+      <!-- Report Sheet Sub-tabs -->
+      <div class="filter-tabs">
+        <button class="filter-btn active" onclick="switchReportTab('report-view-sales', this)">1. Daily Sales & Revenue</button>
+        <button class="filter-btn" onclick="switchReportTab('report-view-cash', this)">2. Cash & Collection</button>
+        <button class="filter-btn" onclick="switchReportTab('report-view-vendor', this)">3. Collection Summary</button>
+        <button class="filter-btn" onclick="switchReportTab('report-view-stock', this)">4. Cylinder Stock</button>
+      </div>
+
+      <!-- Live Sheet Render Containers -->
+      <div id="report-sheet-container" class="report-render-box">
+        <div id="report-view-sales" class="report-view active"></div>
+        <div id="report-view-cash" class="report-view"></div>
+        <div id="report-view-vendor" class="report-view"></div>
+        <div id="report-view-stock" class="report-view"></div>
+      </div>
+    </section>
+
+    <!-- 9. ARCHIVES SCREEN -->
+    <section id="screen-archive" class="screen">
+      <div class="section-header">
+        <div>
+          <h2>Daily Archives on Google Drive [संग्रहीत रिपोर्ट फ़ाइलें]</h2>
+          <p class="subtitle">Past daily PDF and Excel exports saved automatically</p>
+        </div>
+        <button class="btn btn-outline" onclick="loadArchivesList()">Refresh Archive List</button>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table" id="archivesTable">
+          <thead>
+            <tr>
+              <th>Report Date</th>
+              <th>File Name</th>
+              <th>Generated At</th>
+              <th>By User</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="archivesTableBody">
+            <tr>
+              <td colspan="5" class="text-center text-muted">Loading archives list...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 10. ADMIN MANAGEMENT SCREEN -->
+    <section id="screen-admin" class="screen">
+      <div class="section-header">
+        <div>
+          <h2>Administration & Masters [प्रशासन व मास्टर प्रबंधन]</h2>
+          <p class="subtitle">Manage user accounts, catalog rates, and agency vendors</p>
+        </div>
+      </div>
+
+      <div class="filter-tabs">
+        <button class="filter-btn active" onclick="switchAdminTab('admin-tab-users', this)">Staff Users [उपयोगकर्ता]</button>
+        <button class="filter-btn" onclick="switchAdminTab('admin-tab-rates', this)">Item Rates [दर सूची]</button>
+        <button class="filter-btn" onclick="switchAdminTab('admin-tab-audit', this)">Audit Log [कार्य लॉग]</button>
+      </div>
+
+      <!-- Admin: Users Tab -->
+      <div id="admin-tab-users" class="admin-tab active">
+        <div class="d-flex justify-between align-center mb-3">
+          <h3>Staff Accounts</h3>
+          <button class="btn btn-sm btn-primary" onclick="openCreateUserModal()">➕ Create New User</button>
+        </div>
+        <div class="table-responsive">
+          <table class="table" id="adminUsersTable">
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Created At</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="adminUsersBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Admin: Rates Tab -->
+      <div id="admin-tab-rates" class="admin-tab">
+        <div class="d-flex justify-between align-center mb-3">
+          <h3>Catalog Rates & Services</h3>
+          <button class="btn btn-sm btn-primary" onclick="saveAdminRates()">Save Updated Rates</button>
+        </div>
+        <div class="table-responsive">
+          <table class="table" id="adminRatesTable">
+            <thead>
+              <tr>
+                <th>Item / Service</th>
+                <th>Category</th>
+                <th>Rate (₹)</th>
+                <th>Active</th>
+              </tr>
+            </thead>
+            <tbody id="adminRatesBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Admin: Audit Tab -->
+      <div id="admin-tab-audit" class="admin-tab">
+        <h3>System Activity & Audit Log</h3>
+        <p class="subtext">Every modification is logged with timestamp and user.</p>
+        <div class="audit-log-placeholder" id="auditLogContainer">
+          <small class="text-muted">Audit log records are written securely into the AUDIT_LOG Google Sheet tab.</small>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Sticky Mobile-First Bottom Navigation Bar -->
+  <nav class="bottom-nav" id="bottomNav" style="display: none;">
+    <button class="nav-item active" onclick="switchTab('screen-dashboard')">
+      <span class="nav-icon">📊</span>
+      <span class="nav-label">Today</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('screen-entry')">
+      <span class="nav-icon">➕</span>
+      <span class="nav-label">Entry</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('screen-vendors')">
+      <span class="nav-icon">🚚</span>
+      <span class="nav-label">Vendors</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('screen-cashbook')">
+      <span class="nav-icon">💵</span>
+      <span class="nav-label">Cash Book</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('screen-dues')">
+      <span class="nav-icon">📑</span>
+      <span class="nav-label">Dues</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('screen-stock')">
+      <span class="nav-icon">🛢️</span>
+      <span class="nav-label">Stock</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('screen-report')">
+      <span class="nav-icon">📄</span>
+      <span class="nav-label">Report</span>
+    </button>
+    <button class="nav-item" onclick="switchTab('screen-archive')">
+      <span class="nav-icon">📁</span>
+      <span class="nav-label">Archive</span>
+    </button>
+    <button class="nav-item admin-nav-item" id="navItemAdmin" onclick="switchTab('screen-admin')">
+      <span class="nav-icon">⚙️</span>
+      <span class="nav-label">Admin</span>
+    </button>
+  </nav>
+
+  <!-- MODALS -->
+
+  <!-- Add Due Modal -->
+  <div id="modalAddDue" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Add Customer Due [बकाया जोड़ें]</h3>
+        <button class="close-btn" onclick="closeModal('modalAddDue')">&times;</button>
+      </div>
+      <form onsubmit="handleAddDueSubmit(event)">
+        <div class="form-group">
+          <label>Party / Customer Name</label>
+          <input type="text" id="dueParty" class="form-control" placeholder="e.g. Bhawanipur School" required>
+        </div>
+        <div class="form-group">
+          <label>Amount (₹)</label>
+          <input type="number" id="dueAmount" class="form-control" step="0.01" inputmode="decimal" required>
+        </div>
+        <div class="form-group">
+          <label>Bill Date</label>
+          <input type="date" id="dueBillDate" class="form-control" required>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" onclick="closeModal('modalAddDue')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Due</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Recover Due Modal -->
+  <div id="modalRecoverDue" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Recover Due [बकाया वसूली]</h3>
+        <button class="close-btn" onclick="closeModal('modalRecoverDue')">&times;</button>
+      </div>
+      <form onsubmit="handleRecoverDueSubmit(event)">
+        <input type="hidden" id="recoverDueRowId">
+        <div class="form-group">
+          <label>Party Name</label>
+          <input type="text" id="recoverPartyName" class="form-control" readonly>
+        </div>
+        <div class="form-group">
+          <label>Settlement Amount (₹)</label>
+          <input type="number" id="recoverAmount" class="form-control" readonly>
+        </div>
+        <div class="form-group">
+          <label>Payment Mode Received</label>
+          <select id="recoverPayMode" class="form-control" required>
+            <option value="CASH">CASH [नकद]</option>
+            <option value="UPI">UPI [ऑनलाइन]</option>
+            <option value="NEFT">NEFT / RTGS</option>
+          </select>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" onclick="closeModal('modalRecoverDue')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Confirm Recovery</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Create User Modal -->
+  <div id="modalCreateUser" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Create New Staff User</h3>
+        <button class="close-btn" onclick="closeModal('modalCreateUser')">&times;</button>
+      </div>
+      <form onsubmit="handleCreateUserSubmit(event)">
+        <div class="form-group">
+          <label>Username</label>
+          <input type="text" id="newUsername" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="newPassword" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label>Role</label>
+          <select id="newRole" class="form-control">
+            <option value="cashier">Cashier [कैशियर]</option>
+            <option value="admin">Administrator [व्यवस्थापक]</option>
+          </select>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline" onclick="closeModal('modalCreateUser')">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create User</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- API Settings Modal -->
+  <div id="modalApiConfig" class="modal-overlay hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Backend API Configuration</h3>
+        <button class="close-btn" onclick="closeModal('modalApiConfig')">&times;</button>
+      </div>
+      <div class="form-group">
+        <label>Direct Google Apps Script Web App URL</label>
+        <input type="url" id="customApiUrl" class="form-control" placeholder="https://script.google.com/macros/s/.../exec">
+        <small class="text-muted">If using Netlify, leave blank to use the secure built-in serverless proxy at <code>/api</code>.</small>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" onclick="closeModal('modalApiConfig')">Cancel</button>
+        <button type="button" class="btn btn-primary" onclick="saveApiConfig()">Save Configuration</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
