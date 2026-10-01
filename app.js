@@ -1,7 +1,8 @@
 /**
  * ============================================================================
- * SHIV SHAKTI HP GAS AGENCY - ROJNAMCHA FRONTEND (Vanilla JS)
- * Enterprise ERP: Collapsible Sidebar, Theme Switcher, Real-time Accounting
+ * SHIV SHAKTI HP GAS AGENCY - ROJNAMCHA & BILLING ERP (Vanilla JS)
+ * High-End CRM & POS Interface: Multi-Color Metrics, Desktop Sidebar Collapse
+ * 100% Clean English SaaS Aesthetics
  * ============================================================================
  */
 
@@ -11,6 +12,7 @@ const state = {
   user: JSON.parse(localStorage.getItem('ss_user') || 'null'),
   apiUrl: localStorage.getItem('ss_api_url') || '/api',
   theme: localStorage.getItem('ss_theme') || 'light',
+  sidebarCollapsed: localStorage.getItem('ss_sidebar_collapsed') === 'true',
   currentDate: getTodayDateString(),
   meta: {
     rates: [],
@@ -24,18 +26,18 @@ const state = {
   stockList: []
 };
 
-// Screen Headings Mapping
+// Screen Titles (100% Clean English)
 const SCREEN_TITLES = {
-  'screen-login': 'Login & Authentication',
-  'screen-dashboard': 'Daily Overview [डैशबोर्ड]',
-  'screen-entry': 'Billing & Transactions [बिक्री]',
-  'screen-vendors': 'Delivery Vendors & Godown [हॉकर संग्रह]',
-  'screen-cashbook': 'Cash Book & Note Counter [रोकड़ बही]',
-  'screen-dues': 'Outstanding Dues Register [बकाया]',
-  'screen-stock': 'Cylinder Stock Inventory [स्टॉक]',
-  'screen-report': 'Official Daily Report [रिपोर्ट]',
-  'screen-archive': 'Google Drive Archives [फ़ाइलें]',
-  'screen-admin': 'Administration & Masters [प्रशासन]'
+  'screen-login': 'Agency Portal Login',
+  'screen-dashboard': 'Dashboard Overview',
+  'screen-entry': 'POS Invoicing & Billing',
+  'screen-vendors': 'Hawkers & Godown Dispatch',
+  'screen-cashbook': 'Cash Book & Till Reconciliation',
+  'screen-dues': 'Customer Dues & Credit Ledger',
+  'screen-stock': 'Cylinder Inventory & Stock',
+  'screen-report': 'Daily Report Sheet (A4 Print)',
+  'screen-archive': 'Google Drive Cloud Archives',
+  'screen-admin': 'System Administration & Masters'
 };
 
 // Default Master Rates Fallback
@@ -80,6 +82,7 @@ const DEFAULT_CYLINDER_TYPES = [
  */
 document.addEventListener('DOMContentLoaded', () => {
   initTheme();
+  initSidebarState();
   initDatePicker();
   initApiConfig();
 
@@ -103,10 +106,26 @@ function toggleTheme() {
   state.theme = state.theme === 'light' ? 'dark' : 'light';
   document.documentElement.setAttribute('data-theme', state.theme);
   localStorage.setItem('ss_theme', state.theme);
-  showToast(`${state.theme === 'dark' ? 'Night / Dark Mode 🌙' : 'Day / Light Mode ☀️'} activated`, 'info');
+  showToast(`${state.theme === 'dark' ? 'Night / Dark Theme' : 'Day / Light Theme'} activated`, 'info');
 }
 
-/* Sidebar Controller */
+/* Sidebar Desktop Collapse & Mobile Drawer */
+function initSidebarState() {
+  const layout = document.getElementById('appLayout');
+  if (layout && state.sidebarCollapsed && window.innerWidth > 768) {
+    layout.classList.add('sidebar-collapsed');
+  }
+}
+
+function toggleDesktopSidebar() {
+  const layout = document.getElementById('appLayout');
+  if (!layout) return;
+
+  layout.classList.toggle('sidebar-collapsed');
+  state.sidebarCollapsed = layout.classList.contains('sidebar-collapsed');
+  localStorage.setItem('ss_sidebar_collapsed', state.sidebarCollapsed);
+}
+
 function toggleSidebar(forceState) {
   const sidebar = document.getElementById('appSidebar');
   const backdrop = document.getElementById('sidebarBackdrop');
@@ -158,7 +177,10 @@ function applyAuthUI(isLoggedIn) {
   const sidebarAvatar = document.getElementById('sidebarAvatar');
 
   if (isLoggedIn && state.user) {
-    if (bottomNav) bottomNav.style.display = 'flex';
+    // Only show bottomNav on mobile (<= 768px)
+    if (bottomNav && window.innerWidth <= 768) {
+      bottomNav.style.display = 'flex';
+    }
     if (sidebarUserName) sidebarUserName.textContent = state.user.username;
     if (sidebarUserRole) sidebarUserRole.textContent = (state.user.role || 'cashier').toUpperCase();
     if (sidebarAvatar) sidebarAvatar.textContent = (state.user.username || 'U').charAt(0).toUpperCase();
@@ -236,12 +258,12 @@ async function handleLoginSubmit(e) {
   const submitBtn = document.getElementById('btnLoginSubmit');
 
   if (!username || !password) {
-    showToast('Please enter both username and password.', 'warning');
+    showToast('Please enter username and password.', 'warning');
     return;
   }
 
   submitBtn.disabled = true;
-  submitBtn.innerHTML = '<span>Verifying... [सत्यापन जारी]</span>';
+  submitBtn.innerHTML = '<span>Verifying credentials...</span>';
 
   try {
     const data = await apiCall('login', { username, password });
@@ -252,29 +274,27 @@ async function handleLoginSubmit(e) {
     localStorage.setItem('ss_user', JSON.stringify(state.user));
 
     applyAuthUI(true);
-    showToast(`Welcome back, ${data.username}! [सफल लॉगिन]`, 'success');
+    showToast(`Welcome back, ${data.username}!`, 'success');
     await fetchMetadata();
     switchTab('screen-dashboard');
   } catch (err) {
-    // Error handled in apiCall
+    // Handled in apiCall
   } finally {
     submitBtn.disabled = false;
     submitBtn.innerHTML = `
-      <span>Secure Login [लॉगिन करें]</span>
+      <span>Sign In to System</span>
       <svg viewBox="0 0 24 24" class="svg-icon"><path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
     `;
   }
 }
 
 async function handleLogoutClick() {
-  if (confirm('Are you sure you want to log out? [क्या आप लॉगआउट करना चाहते हैं?]')) {
+  if (confirm('Are you sure you want to log out?')) {
     try {
       if (state.token) {
         await apiCall('logout', {}, false);
       }
-    } catch (e) {
-      // Ignore
-    }
+    } catch (e) {}
     localStorage.removeItem('ss_token');
     localStorage.removeItem('ss_user');
     state.token = null;
@@ -318,7 +338,6 @@ async function fetchMetadata() {
  * ============================================================================
  */
 function switchTab(screenId) {
-  // If not logged in and not heading to login
   if (!state.token && screenId !== 'screen-login') {
     screenId = 'screen-login';
   }
@@ -333,22 +352,22 @@ function switchTab(screenId) {
     headingEl.textContent = SCREEN_TITLES[screenId];
   }
 
-  // Update Sidebar Active state
+  // Update Sidebar Active Link
   document.querySelectorAll('.app-sidebar .nav-link').forEach(btn => {
     btn.classList.toggle('active', btn.getAttribute('onclick')?.includes(screenId));
   });
 
-  // Update Bottom Nav Active state
-  document.querySelectorAll('.bottom-nav-item').forEach(btn => {
+  // Update Bottom Nav Active Link
+  document.querySelectorAll('.mobile-nav-item').forEach(btn => {
     btn.classList.toggle('active', btn.getAttribute('onclick')?.includes(screenId));
   });
 
-  // Close sidebar drawer on mobile
-  if (window.innerWidth <= 900) {
+  // Close drawer on mobile
+  if (window.innerWidth <= 768) {
     toggleSidebar(false);
   }
 
-  // Screen data loading
+  // Screen Data Loaders
   if (screenId === 'screen-dashboard') {
     loadDashboardData();
   } else if (screenId === 'screen-entry') {
@@ -376,7 +395,7 @@ function switchTab(screenId) {
 
 /**
  * ============================================================================
- * 2. DASHBOARD (TODAY)
+ * 2. DASHBOARD
  * ============================================================================
  */
 async function loadDashboardData() {
@@ -392,21 +411,21 @@ async function loadDashboardData() {
     const closingVal = data.cashBook ? data.cashBook.closingCash : 0;
     document.getElementById('kpiClosingCash').textContent = formatINR(closingVal);
 
-    // Reconciliation banner
+    // Audit reconciliation banner
     const banner = document.getElementById('reconciliationBanner');
     const icon = document.getElementById('reconIcon');
     const title = document.getElementById('reconStatusTitle');
     const desc = document.getElementById('reconStatusDetail');
 
     if (data.reconciliation.isBalanced) {
-      banner.className = 'status-banner-premium balanced';
+      banner.className = 'audit-banner balanced';
       icon.textContent = '✓';
-      title.textContent = 'Accounts Balanced & Reconciled [खाता संतुलित है]';
-      desc.textContent = 'Billing, digital collections, counter cash and stock reconcile with master figures.';
+      title.textContent = 'Accounts Balanced & Reconciled';
+      desc.textContent = 'Billing receipts, physical counter cash, and delivery stocks reconcile with master books.';
     } else {
-      banner.className = 'status-banner-premium mismatch';
+      banner.className = 'audit-banner mismatch';
       icon.textContent = '⚠️';
-      title.textContent = 'Audit Difference Detected [खाते में अंतर]';
+      title.textContent = 'Audit Difference Detected';
       desc.textContent = data.reconciliation.statusText;
     }
   } catch (e) {}
@@ -414,9 +433,18 @@ async function loadDashboardData() {
 
 /**
  * ============================================================================
- * 3. ADD ENTRY & TODAY ENTRIES LIST
+ * 3. POS INVOICING & BILLING
  * ============================================================================
  */
+function selectQuickCategory(category, btn) {
+  document.querySelectorAll('.category-pill-bar .cat-pill').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+
+  const catSelect = document.getElementById('entryCategory');
+  catSelect.value = category;
+  onCategoryChanged();
+}
+
 function onCategoryChanged() {
   populateEntryItems();
 }
@@ -424,7 +452,7 @@ function onCategoryChanged() {
 function populateEntryItems() {
   const category = document.getElementById('entryCategory').value;
   const itemSelect = document.getElementById('entryItem');
-  itemSelect.innerHTML = '<option value="">-- Select Item --</option>';
+  itemSelect.innerHTML = '<option value="">-- Select Product / Service --</option>';
 
   const filteredRates = state.meta.rates.filter(r => r.category === category);
   filteredRates.forEach(r => {
@@ -483,10 +511,10 @@ function updateSplitTotal() {
   const msgEl = document.getElementById('splitValidationMsg');
 
   if (Math.abs(splitSum - totalAmount) < 0.01) {
-    msgEl.style.color = 'var(--success)';
-    msgEl.textContent = `✓ Perfectly Balanced: Settled ${formatINR(splitSum)} of ${formatINR(totalAmount)}`;
+    msgEl.style.color = 'var(--c-green)';
+    msgEl.textContent = `✓ Balanced: Settled ${formatINR(splitSum)} of ${formatINR(totalAmount)}`;
   } else {
-    msgEl.style.color = 'var(--danger)';
+    msgEl.style.color = 'var(--c-rose)';
     msgEl.textContent = `⚠️ Mismatch: Settled ${formatINR(splitSum)} / Required ${formatINR(totalAmount)} (Diff: ${formatINR(totalAmount - splitSum)})`;
   }
 }
@@ -513,7 +541,7 @@ async function submitEntryData(isAddAnother = false) {
   const saveBtn = document.getElementById('btnSaveEntry');
 
   if (!item) {
-    showToast('Please select an item [कृपया वस्तु चुनें]', 'warning');
+    showToast('Please select a product or service item.', 'warning');
     return;
   }
   if (qty <= 0 && category !== 'RETURN' && category !== 'DUES_RECEIVED') {
@@ -530,7 +558,7 @@ async function submitEntryData(isAddAnother = false) {
     const splitSum = cash + upi + hpPay + dues + other;
 
     if (Math.abs(splitSum - amount) >= 0.01) {
-      showToast('Split amounts must equal Total Bill Amount.', 'error');
+      showToast('Split settlement amounts must equal Total Bill Amount.', 'error');
       return;
     }
   }
@@ -552,7 +580,7 @@ async function submitEntryData(isAddAnother = false) {
     };
 
     await apiCall('addEntry', { entry: entryPayload });
-    showToast('Entry saved successfully! [प्रविष्टि सहेजी गई]', 'success');
+    showToast('Bill saved successfully!', 'success');
 
     if (isAddAnother) {
       document.getElementById('entryQty').value = '1';
@@ -568,7 +596,7 @@ async function submitEntryData(isAddAnother = false) {
   } catch (err) {
   } finally {
     saveBtn.disabled = false;
-    saveBtn.innerHTML = '<span>Save Entry [सेव करें]</span>';
+    saveBtn.innerHTML = '<span>Save Bill</span>';
   }
 }
 
@@ -590,36 +618,36 @@ async function loadTodayEntries() {
 function renderTodayEntriesTable(entries) {
   const tbody = document.getElementById('entriesTableBody');
   const countBadge = document.getElementById('entriesCountBadge');
-  countBadge.textContent = `${entries.length} entries`;
+  countBadge.textContent = `${entries.length} bills`;
 
   if (!entries.length) {
-    tbody.innerHTML = `<tr><td colspan="10" class="empty-state">No entries recorded for ${formatDisplayDate(state.currentDate)}.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10" class="empty-state">No bills recorded for ${formatDisplayDate(state.currentDate)}.</td></tr>`;
     return;
   }
 
   tbody.innerHTML = entries.map(e => `
     <tr>
-      <td><small class="mono-font">${e.time || '--'}</small></td>
-      <td><span class="count-pill">${e.category}</span></td>
+      <td><small class="font-mono">${e.time || '--'}</small></td>
+      <td><span class="badge-pill bg-purple-soft">${e.category}</span></td>
       <td><strong>${escapeHtml(e.item)}</strong></td>
-      <td class="text-center mono-font">${e.qty}</td>
-      <td class="text-right mono-font">₹${e.rate}</td>
-      <td class="text-right mono-font font-weight-bold">${formatINR(e.amount)}</td>
-      <td><span class="variance-badge">${e.payMode}</span></td>
+      <td class="text-center font-mono">${e.qty}</td>
+      <td class="text-right font-mono">₹${e.rate}</td>
+      <td class="text-right font-mono font-bold">${formatINR(e.amount)}</td>
+      <td><span class="variance-chip">${e.payMode}</span></td>
       <td>${escapeHtml(e.party || '-')}</td>
       <td><small>${escapeHtml(e.enteredBy)}</small></td>
       <td class="text-center">
-        <button class="btn-outline-theme btn-sm text-danger" onclick="deleteEntryClick('${e.id}')">Delete</button>
+        <button class="btn-erp-outline btn-sm text-danger" onclick="deleteEntryClick('${e.id}')">Delete</button>
       </td>
     </tr>
   `).join('');
 }
 
 async function deleteEntryClick(id) {
-  if (confirm('Are you sure you want to delete this entry? [क्या आप यह प्रविष्टि हटाना चाहते हैं?]')) {
+  if (confirm('Are you sure you want to delete this bill entry?')) {
     try {
       await apiCall('deleteEntry', { id });
-      showToast('Entry deleted successfully.', 'success');
+      showToast('Bill deleted successfully.', 'success');
       loadTodayEntries();
       loadDashboardData();
     } catch (e) {}
@@ -628,7 +656,7 @@ async function deleteEntryClick(id) {
 
 /**
  * ============================================================================
- * 4. VENDOR LOG (COLLECTION SUMMARY)
+ * 4. VENDOR DISPATCH
  * ============================================================================
  */
 async function loadVendorLogData() {
@@ -638,44 +666,44 @@ async function loadVendorLogData() {
 
   tbody.innerHTML = vendors.map((v, idx) => `
     <tr data-vendor="${v}">
-      <td class="text-center mono-font">${idx + 1}</td>
+      <td class="text-center font-mono">${idx + 1}</td>
       <td><strong>${v}</strong></td>
-      <td class="text-center"><input type="number" class="v-gas mono-font" value="0" min="0" oninput="calculateVendorRow(this)"></td>
-      <td class="text-center"><input type="number" class="v-cash mono-font" value="0" min="0" oninput="calculateVendorRow(this)"></td>
-      <td class="text-center"><input type="number" class="v-upi mono-font" value="0" min="0" oninput="calculateVendorRow(this)"></td>
-      <td class="text-center"><input type="number" class="v-hp mono-font" value="0" min="0" oninput="calculateVendorRow(this)"></td>
-      <td class="text-center"><input type="number" class="v-dues mono-font" value="0" min="0" oninput="calculateVendorRow(this)"></td>
-      <td class="v-status text-center"><span class="variance-badge">Balanced</span></td>
+      <td class="text-center"><input type="number" class="v-gas font-mono" value="0" min="0" oninput="calculateVendorRow(this)"></td>
+      <td class="text-center"><input type="number" class="v-cash font-mono" value="0" min="0" oninput="calculateVendorRow(this)"></td>
+      <td class="text-center"><input type="number" class="v-upi font-mono" value="0" min="0" oninput="calculateVendorRow(this)"></td>
+      <td class="text-center"><input type="number" class="v-hp font-mono" value="0" min="0" oninput="calculateVendorRow(this)"></td>
+      <td class="text-center"><input type="number" class="v-dues font-mono" value="0" min="0" oninput="calculateVendorRow(this)"></td>
+      <td class="v-status text-center"><span class="variance-chip">Balanced</span></td>
     </tr>
   `).join('');
 
   tfoot.innerHTML = `
-    <tr class="table-info font-weight-bold">
+    <tr class="table-info font-bold">
       <td colspan="2">DELIVERY TOTAL</td>
-      <td id="footDelivGas" class="text-center mono-font">0</td>
-      <td id="footDelivCash" class="text-center mono-font">0</td>
-      <td id="footDelivUpi" class="text-center mono-font">0</td>
-      <td id="footDelivHp" class="text-center mono-font">0</td>
-      <td id="footDelivDues" class="text-center mono-font">0</td>
-      <td id="footDelivStatus" class="text-center"><span class="variance-badge">Balanced</span></td>
+      <td id="footDelivGas" class="text-center font-mono">0</td>
+      <td id="footDelivCash" class="text-center font-mono">0</td>
+      <td id="footDelivUpi" class="text-center font-mono">0</td>
+      <td id="footDelivHp" class="text-center font-mono">0</td>
+      <td id="footDelivDues" class="text-center font-mono">0</td>
+      <td id="footDelivStatus" class="text-center"><span class="variance-chip">Balanced</span></td>
     </tr>
-    <tr data-vendor="GODOWN" class="font-weight-bold">
-      <td colspan="2">GODOWN [गोदाम काउंटर]</td>
-      <td class="text-center"><input type="number" class="v-gas mono-font" id="godownGas" value="0" min="0" oninput="calculateVendorTotals()"></td>
-      <td class="text-center"><input type="number" class="v-cash mono-font" id="godownCash" value="0" min="0" oninput="calculateVendorTotals()"></td>
-      <td class="text-center"><input type="number" class="v-upi mono-font" id="godownUpi" value="0" min="0" oninput="calculateVendorTotals()"></td>
-      <td class="text-center"><input type="number" class="v-hp mono-font" id="godownHp" value="0" min="0" oninput="calculateVendorTotals()"></td>
-      <td class="text-center"><input type="number" class="v-dues mono-font" id="godownDues" value="0" min="0" oninput="calculateVendorTotals()"></td>
-      <td id="godownStatus" class="text-center"><span class="variance-badge">Balanced</span></td>
+    <tr data-vendor="GODOWN" class="font-bold">
+      <td colspan="2">GODOWN COUNTER</td>
+      <td class="text-center"><input type="number" class="v-gas font-mono" id="godownGas" value="0" min="0" oninput="calculateVendorTotals()"></td>
+      <td class="text-center"><input type="number" class="v-cash font-mono" id="godownCash" value="0" min="0" oninput="calculateVendorTotals()"></td>
+      <td class="text-center"><input type="number" class="v-upi font-mono" id="godownUpi" value="0" min="0" oninput="calculateVendorTotals()"></td>
+      <td class="text-center"><input type="number" class="v-hp font-mono" id="godownHp" value="0" min="0" oninput="calculateVendorTotals()"></td>
+      <td class="text-center"><input type="number" class="v-dues font-mono" id="godownDues" value="0" min="0" oninput="calculateVendorTotals()"></td>
+      <td id="godownStatus" class="text-center"><span class="variance-chip">Balanced</span></td>
     </tr>
-    <tr class="table-primary font-weight-bold" style="font-size: 0.95rem;">
+    <tr class="table-primary font-bold" style="font-size: 0.95rem;">
       <td colspan="2">GRAND TOTAL</td>
-      <td id="footGrandGas" class="text-center mono-font text-primary">0</td>
-      <td id="footGrandCash" class="text-center mono-font text-success">0</td>
-      <td id="footGrandUpi" class="text-center mono-font text-info">0</td>
-      <td id="footGrandHp" class="text-center mono-font">0</td>
-      <td id="footGrandDues" class="text-center mono-font text-warning">0</td>
-      <td id="footGrandStatus" class="text-center"><span class="variance-badge">Balanced</span></td>
+      <td id="footGrandGas" class="text-center font-mono text-primary">0</td>
+      <td id="footGrandCash" class="text-center font-mono text-emerald">0</td>
+      <td id="footGrandUpi" class="text-center font-mono text-purple">0</td>
+      <td id="footGrandHp" class="text-center font-mono">0</td>
+      <td id="footGrandDues" class="text-center font-mono text-amber">0</td>
+      <td id="footGrandStatus" class="text-center"><span class="variance-chip">Balanced</span></td>
     </tr>
   `;
 
@@ -694,9 +722,9 @@ function calculateVendorRow(input) {
   const statusCell = tr.querySelector('.v-status');
 
   if (gas === totalSettled) {
-    statusCell.innerHTML = `<span class="variance-badge">Balanced</span>`;
+    statusCell.innerHTML = `<span class="variance-chip">Balanced</span>`;
   } else {
-    statusCell.innerHTML = `<span class="variance-badge mismatch">Diff: ${gas - totalSettled}</span>`;
+    statusCell.innerHTML = `<span class="variance-chip mismatch">Diff: ${gas - totalSettled}</span>`;
   }
 
   calculateVendorTotals();
@@ -762,14 +790,14 @@ async function saveVendorLogData() {
 
   try {
     await apiCall('saveVendorLog', { date: state.currentDate, logs: rows });
-    showToast('Vendor logs saved successfully! [हॉकर विवरण सहेजा गया]', 'success');
+    showToast('Vendor dispatch log saved successfully!', 'success');
     loadDashboardData();
   } catch (e) {}
 }
 
 /**
  * ============================================================================
- * 5. CASH BOOK & DENOMINATION COUNTER
+ * 5. CASH BOOK & TILL RECONCILIATION
  * ============================================================================
  */
 async function loadCashbookData() {
@@ -873,15 +901,15 @@ function verifyDenominationsVsBook(bookClosing) {
   badge.textContent = `Variance: ${formatINR(variance)}`;
 
   if (Math.abs(variance) < 0.01) {
-    badge.className = 'variance-badge';
-    verdictBox.className = 'verdict-banner-premium';
+    badge.className = 'variance-chip';
+    verdictBox.className = 'verdict-card';
     verdictIcon.textContent = '✓';
-    verdictText.textContent = 'Physical notes match book closing balance perfectly! [भौतिक नकद पूर्ण रूप से सही है]';
+    verdictText.textContent = 'Physical till notes match book closing balance perfectly!';
   } else {
-    badge.className = 'variance-badge mismatch';
-    verdictBox.className = 'verdict-banner-premium mismatch';
+    badge.className = 'variance-chip mismatch';
+    verdictBox.className = 'verdict-card mismatch';
     verdictIcon.textContent = '⚠️';
-    verdictText.textContent = `Cash Discrepancy: Physical cash differs from book by ${formatINR(variance)}!`;
+    verdictText.textContent = `Till Discrepancy: Physical cash differs from book by ${formatINR(variance)}!`;
   }
 }
 
@@ -927,14 +955,14 @@ async function saveCashbookData() {
 
   try {
     await apiCall('saveCashbook', { date: state.currentDate, data: payload });
-    showToast('Cash Book saved successfully! [रोकड़ बही सुरक्षित की गई]', 'success');
+    showToast('Cash Book saved successfully!', 'success');
     loadDashboardData();
   } catch (e) {}
 }
 
 /**
  * ============================================================================
- * 6. DUES MANAGEMENT
+ * 6. DUES & CREDIT LEDGER
  * ============================================================================
  */
 async function loadDuesData(filterStatus = 'PENDING') {
@@ -946,7 +974,7 @@ async function loadDuesData(filterStatus = 'PENDING') {
 }
 
 function filterDuesTable(status, btn) {
-  document.querySelectorAll('#screen-dues .sub-pill-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#screen-dues .filter-pill').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
   loadDuesData(status);
 }
@@ -960,18 +988,18 @@ function renderDuesTable(dues) {
 
   tbody.innerHTML = dues.map(d => `
     <tr>
-      <td class="mono-font">${formatDisplayDate(d.date)}</td>
+      <td class="font-mono">${formatDisplayDate(d.date)}</td>
       <td><strong>${escapeHtml(d.party)}</strong></td>
-      <td class="mono-font">${formatDisplayDate(d.billDate)}</td>
-      <td class="text-right mono-font font-weight-bold text-danger">${formatINR(d.amount)}</td>
+      <td class="font-mono">${formatDisplayDate(d.billDate)}</td>
+      <td class="text-right font-mono font-bold text-danger">${formatINR(d.amount)}</td>
       <td>
-        <span class="variance-badge ${d.status === 'RECOVERED' ? '' : 'mismatch'}">${d.status}</span>
+        <span class="variance-chip ${d.status === 'RECOVERED' ? '' : 'mismatch'}">${d.status}</span>
       </td>
-      <td class="mono-font">${d.recoveredDate ? formatDisplayDate(d.recoveredDate) : '-'}</td>
+      <td class="font-mono">${d.recoveredDate ? formatDisplayDate(d.recoveredDate) : '-'}</td>
       <td class="text-center">
         ${d.status === 'PENDING' ? `
-          <button class="btn-gradient-primary btn-sm" onclick="openRecoverDueModal('${d.rowId}', '${escapeHtml(d.party)}', ${d.amount})">
-            Recover [वसूलें]
+          <button class="btn-erp-primary btn-sm" onclick="openRecoverDueModal('${d.rowId}', '${escapeHtml(d.party)}', ${d.amount})">
+            Collect Payment
           </button>
         ` : '<span>✓ Settled</span>'}
       </td>
@@ -997,7 +1025,7 @@ async function handleAddDueSubmit(e) {
       due: { date: state.currentDate, party, amount, billDate }
     });
     closeModal('modalAddDue');
-    showToast('Due record added successfully.', 'success');
+    showToast('Customer due record added successfully.', 'success');
     loadDuesData('PENDING');
   } catch (e) {}
 }
@@ -1021,7 +1049,7 @@ async function handleRecoverDueSubmit(e) {
       payMode: payMode
     });
     closeModal('modalRecoverDue');
-    showToast('Due recovered and credited to today\'s sales!', 'success');
+    showToast('Due recovered and credited to daily sales!', 'success');
     loadDuesData('PENDING');
     loadDashboardData();
   } catch (e) {}
@@ -1029,7 +1057,7 @@ async function handleRecoverDueSubmit(e) {
 
 /**
  * ============================================================================
- * 7. STOCK MANAGEMENT
+ * 7. CYLINDER STOCK & INVENTORY
  * ============================================================================
  */
 async function loadStockData() {
@@ -1039,32 +1067,32 @@ async function loadStockData() {
   tbody.innerHTML = state.meta.cylinderTypes.map(c => `
     <tr data-type="${c}">
       <td><strong>${c}</strong></td>
-      <td><input type="number" class="st-op-fill form-control-premium mono-font text-center" value="0" min="0" oninput="calculateStockTotals()"></td>
-      <td><input type="number" class="st-rec-hpcl form-control-premium mono-font text-center" value="0" min="0" oninput="calculateStockTotals()"></td>
-      <td><input type="number" class="st-sold form-control-premium mono-font text-center" value="0" min="0" oninput="calculateStockTotals()"></td>
-      <td><input type="number" class="st-adj form-control-premium mono-font text-center" value="0" oninput="calculateStockTotals()"></td>
-      <td class="st-cl-fill text-center mono-font font-weight-bold">0</td>
-      <td><input type="number" class="st-op-emp form-control-premium mono-font text-center" value="0" min="0" oninput="calculateStockTotals()"></td>
-      <td><input type="number" class="st-cust-emp form-control-premium mono-font text-center" value="0" min="0" oninput="calculateStockTotals()"></td>
-      <td><input type="number" class="st-oth-emp form-control-premium mono-font text-center" value="0" min="0" oninput="calculateStockTotals()"></td>
-      <td><input type="number" class="st-plant-emp form-control-premium mono-font text-center" value="0" min="0" oninput="calculateStockTotals()"></td>
-      <td class="st-cl-emp text-center mono-font font-weight-bold">0</td>
+      <td><input type="number" class="st-op-fill input-modern font-mono text-center" value="0" min="0" oninput="calculateStockTotals()"></td>
+      <td><input type="number" class="st-rec-hpcl input-modern font-mono text-center" value="0" min="0" oninput="calculateStockTotals()"></td>
+      <td><input type="number" class="st-sold input-modern font-mono text-center" value="0" min="0" oninput="calculateStockTotals()"></td>
+      <td><input type="number" class="st-adj input-modern font-mono text-center" value="0" oninput="calculateStockTotals()"></td>
+      <td class="st-cl-fill text-center font-mono font-bold">0</td>
+      <td><input type="number" class="st-op-emp input-modern font-mono text-center" value="0" min="0" oninput="calculateStockTotals()"></td>
+      <td><input type="number" class="st-cust-emp input-modern font-mono text-center" value="0" min="0" oninput="calculateStockTotals()"></td>
+      <td><input type="number" class="st-oth-emp input-modern font-mono text-center" value="0" min="0" oninput="calculateStockTotals()"></td>
+      <td><input type="number" class="st-plant-emp input-modern font-mono text-center" value="0" min="0" oninput="calculateStockTotals()"></td>
+      <td class="st-cl-emp text-center font-mono font-bold">0</td>
     </tr>
   `).join('');
 
   tfoot.innerHTML = `
-    <tr class="table-primary font-weight-bold">
+    <tr class="table-primary font-bold">
       <td>TOTAL</td>
-      <td id="totOpFill" class="text-center mono-font">0</td>
-      <td id="totRecHpcl" class="text-center mono-font">0</td>
-      <td id="totSold" class="text-center mono-font">0</td>
-      <td id="totAdj" class="text-center mono-font">0</td>
-      <td id="totClFill" class="text-center mono-font text-primary">0</td>
-      <td id="totOpEmp" class="text-center mono-font">0</td>
-      <td id="totCustEmp" class="text-center mono-font">0</td>
-      <td id="totOthEmp" class="text-center mono-font">0</td>
-      <td id="totPlantEmp" class="text-center mono-font">0</td>
-      <td id="totClEmp" class="text-center mono-font text-danger">0</td>
+      <td id="totOpFill" class="text-center font-mono">0</td>
+      <td id="totRecHpcl" class="text-center font-mono">0</td>
+      <td id="totSold" class="text-center font-mono">0</td>
+      <td id="totAdj" class="text-center font-mono">0</td>
+      <td id="totClFill" class="text-center font-mono text-primary">0</td>
+      <td id="totOpEmp" class="text-center font-mono">0</td>
+      <td id="totCustEmp" class="text-center font-mono">0</td>
+      <td id="totOthEmp" class="text-center font-mono">0</td>
+      <td id="totPlantEmp" class="text-center font-mono">0</td>
+      <td id="totClEmp" class="text-center font-mono text-danger">0</td>
     </tr>
   `;
 
@@ -1138,7 +1166,7 @@ async function saveStockData() {
 
   try {
     await apiCall('saveStock', { date: state.currentDate, data: stockRows });
-    showToast('Stock balance saved successfully! [सिलेंडर स्टॉक सुरक्षित किया गया]', 'success');
+    showToast('Cylinder stock inventory saved successfully!', 'success');
   } catch (e) {}
 }
 
@@ -1164,7 +1192,7 @@ function renderReportTable(containerId, gridData) {
     return;
   }
 
-  let html = '<table class="table-premium table-bordered table-sm" style="font-size: 0.8rem;">';
+  let html = '<table class="table-modern table-bordered" style="font-size: 0.8rem;">';
   gridData.forEach((row, rIdx) => {
     if (row.some(c => c !== '')) {
       html += '<tr>';
@@ -1181,7 +1209,7 @@ function renderReportTable(containerId, gridData) {
 }
 
 function switchReportTab(viewId, btn) {
-  document.querySelectorAll('#screen-report .sub-pill-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#screen-report .filter-pill').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.report-view').forEach(v => v.classList.remove('active'));
 
   btn.classList.add('active');
@@ -1193,7 +1221,7 @@ async function generateDailyArchive() {
   if (confirm(`Generate and archive official PDF + Excel for ${formatDisplayDate(state.currentDate)} to Google Drive?`)) {
     try {
       const res = await apiCall('generateArchive', { date: state.currentDate });
-      showToast('Daily Report archived to Drive successfully!', 'success');
+      showToast('Daily Report archived to Google Drive successfully!', 'success');
       if (res.pdfUrl) {
         window.open(res.pdfUrl, '_blank');
       }
@@ -1222,13 +1250,13 @@ async function loadArchivesList() {
 
     tbody.innerHTML = data.archives.map(a => `
       <tr>
-        <td class="mono-font"><strong>${formatDisplayDate(a.date)}</strong></td>
+        <td class="font-mono"><strong>${formatDisplayDate(a.date)}</strong></td>
         <td>${escapeHtml(a.fileName)}</td>
-        <td><small class="mono-font">${a.createdAt || '-'}</small></td>
+        <td><small class="font-mono">${a.createdAt || '-'}</small></td>
         <td><small>${escapeHtml(a.generatedBy || '-')}</small></td>
         <td class="text-center">
-          <a href="${a.pdfUrl}" target="_blank" class="btn-gradient-primary btn-sm">PDF</a>
-          ${a.xlsxUrl ? `<a href="${a.xlsxUrl}" target="_blank" class="btn-outline-theme btn-sm">Excel</a>` : ''}
+          <a href="${a.pdfUrl}" target="_blank" class="btn-erp-primary btn-sm">PDF</a>
+          ${a.xlsxUrl ? `<a href="${a.xlsxUrl}" target="_blank" class="btn-erp-outline btn-sm">Excel</a>` : ''}
         </td>
       </tr>
     `).join('');
@@ -1241,7 +1269,7 @@ async function loadArchivesList() {
  * ============================================================================
  */
 function switchAdminTab(tabId, btn) {
-  document.querySelectorAll('#screen-admin .sub-pill-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#screen-admin .filter-pill').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
 
   btn.classList.add('active');
@@ -1257,18 +1285,18 @@ async function loadAdminUsers() {
     tbody.innerHTML = (data.users || []).map(u => `
       <tr>
         <td><strong>${escapeHtml(u.username)}</strong></td>
-        <td><span class="count-pill">${u.role.toUpperCase()}</span></td>
+        <td><span class="badge-pill bg-purple-soft">${u.role.toUpperCase()}</span></td>
         <td>
-          <span class="variance-badge ${u.active ? '' : 'mismatch'}">
+          <span class="variance-chip ${u.active ? '' : 'mismatch'}">
             ${u.active ? 'Active' : 'Disabled'}
           </span>
         </td>
-        <td><small class="mono-font">${u.createdAt || '-'}</small></td>
+        <td><small class="font-mono">${u.createdAt || '-'}</small></td>
         <td class="text-center">
-          <button class="btn-outline-theme btn-sm" onclick="toggleUserActive('${u.username}', ${!u.active})">
+          <button class="btn-erp-outline btn-sm" onclick="toggleUserActive('${u.username}', ${!u.active})">
             ${u.active ? 'Disable' : 'Enable'}
           </button>
-          <button class="btn-outline-theme btn-sm" onclick="resetUserPasswordPrompt('${u.username}')">
+          <button class="btn-erp-outline btn-sm" onclick="resetUserPasswordPrompt('${u.username}')">
             Reset Password
           </button>
         </td>
@@ -1300,7 +1328,7 @@ async function handleCreateUserSubmit(e) {
 async function toggleUserActive(username, newState) {
   try {
     await apiCall('adminSetActive', { username, active: newState });
-    showToast(`User status updated.`, 'success');
+    showToast('User status updated.', 'success');
     loadAdminUsers();
   } catch (e) {}
 }
@@ -1320,9 +1348,9 @@ async function loadAdminRates() {
   tbody.innerHTML = state.meta.rates.map(r => `
     <tr data-item="${escapeHtml(r.item)}">
       <td><strong>${escapeHtml(r.item)}</strong></td>
-      <td><span class="count-pill">${r.category}</span></td>
+      <td><span class="badge-pill bg-purple-soft">${r.category}</span></td>
       <td>
-        <input type="number" class="form-control-premium mono-font admin-rate-input" value="${r.rate}" step="0.01" style="width: 110px; height: 36px;">
+        <input type="number" class="input-modern font-mono admin-rate-input" value="${r.rate}" step="0.01" style="width: 120px; height: 36px;">
       </td>
       <td class="text-center">
         <input type="checkbox" class="admin-rate-active" checked style="width: 18px; height: 18px;">
@@ -1349,7 +1377,7 @@ async function saveAdminRates() {
 
   try {
     await apiCall('adminUpdateRates', { rates: updatedRates });
-    showToast('Catalog rates updated successfully! [दर सूची अद्यतन की गई]', 'success');
+    showToast('Catalog rates updated successfully!', 'success');
     await fetchMetadata();
   } catch (e) {}
 }

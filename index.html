@@ -3,21 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Shiv Shakti HP Gas Agency - Rojnamcha ERP</title>
+  <title>Shiv Shakti HP Gas ERP - Daily Rojnamcha & Billing</title>
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <!-- Global Toast / Banner Notification -->
+  <!-- Toast Notification -->
   <div id="toastNotification" class="toast hidden" role="alert">
     <div id="toastIcon" class="toast-icon"></div>
     <div id="toastMessage" class="toast-message"></div>
     <button class="toast-close" onclick="hideToast()" aria-label="Close notification">&times;</button>
   </div>
 
-  <!-- Global Loading Spinner Overlay -->
+  <!-- Loading Spinner Overlay -->
   <div id="loadingOverlay" class="loading-overlay hidden">
     <div class="spinner-pulse">
       <div class="spinner-core"></div>
@@ -25,476 +25,492 @@
     <div id="loadingText" class="loading-text">Processing transaction...</div>
   </div>
 
-  <!-- Sidebar Backdrop for Mobile -->
+  <!-- Mobile Sidebar Backdrop -->
   <div id="sidebarBackdrop" class="sidebar-backdrop" onclick="toggleSidebar(false)"></div>
 
-  <div class="app-layout">
+  <div class="app-layout" id="appLayout">
 
-    <!-- PREMIUM COLLAPSIBLE SIDEBAR -->
+    <!-- COLLAPSIBLE ERP SIDEBAR -->
     <aside class="app-sidebar" id="appSidebar">
       <div class="sidebar-header">
         <div class="brand-container">
-          <div class="agency-emblem">
-            <span>HP</span>
-          </div>
+          <div class="agency-emblem">HP</div>
           <div class="brand-text-block">
             <h1 class="brand-title">SHIV SHAKTI</h1>
-            <span class="brand-subtitle">HP GAS • PANDAUL</span>
+            <span class="brand-subtitle">HP GAS ERP • PANDAUL</span>
           </div>
         </div>
-        <button class="sidebar-close-btn" id="sidebarCloseBtn" onclick="toggleSidebar(false)" aria-label="Close Sidebar">
+        <!-- Desktop Collapse Button -->
+        <button class="sidebar-toggle-btn" id="sidebarCollapseBtn" onclick="toggleDesktopSidebar()" title="Toggle Sidebar">
+          <svg viewBox="0 0 24 24" class="svg-icon"><path d="M11 19l-7-7 7-7m8 14l-7-7 7-7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <!-- Mobile Close Button -->
+        <button class="sidebar-close-btn" onclick="toggleSidebar(false)" aria-label="Close Sidebar">
           <svg viewBox="0 0 24 24" class="svg-icon"><path d="M18 6L6 18M6 6l12 12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
         </button>
       </div>
 
       <div class="sidebar-nav-scroll">
-        <div class="nav-section-title">MAIN OPERATIONS</div>
+        <div class="nav-section-title">CORE BILLING</div>
         <nav class="sidebar-nav">
-          <button class="nav-link active" onclick="switchTab('screen-dashboard')">
-            <span class="nav-icon-wrap">
+          <button class="nav-link active" onclick="switchTab('screen-dashboard')" title="Dashboard Overview">
+            <span class="nav-icon-wrap icon-blue">
               <svg viewBox="0 0 24 24" class="svg-icon"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" fill="currentColor"/></svg>
             </span>
-            <span class="nav-link-text">Overview [डैशबोर्ड]</span>
+            <span class="nav-link-text">Dashboard</span>
           </button>
 
-          <button class="nav-link" onclick="switchTab('screen-entry')">
-            <span class="nav-icon-wrap">
-              <svg viewBox="0 0 24 24" class="svg-icon"><path d="M12 4v16m8-8H4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+          <button class="nav-link" onclick="switchTab('screen-entry')" title="POS & Invoicing">
+            <span class="nav-icon-wrap icon-purple">
+              <svg viewBox="0 0 24 24" class="svg-icon"><path d="M9 14l2 2 4-4M7 3h10a2 2 0 012 2v14a2 2 0 01-2 2H7a2 2 0 01-2-2V5a2 2 0 012-2z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </span>
-            <span class="nav-link-text">Billing Entry [बिक्री]</span>
+            <span class="nav-link-text">Billing & POS</span>
           </button>
 
-          <button class="nav-link" onclick="switchTab('screen-vendors')">
-            <span class="nav-icon-wrap">
+          <button class="nav-link" onclick="switchTab('screen-vendors')" title="Hawkers & Godown Dispatch">
+            <span class="nav-icon-wrap icon-orange">
               <svg viewBox="0 0 24 24" class="svg-icon"><path d="M1 3h15v13H1zM16 8h4l3 3v5h-7V8zM5.5 19a2.5 2.5 0 100-5 2.5 2.5 0 000 5zm12 0a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" fill="currentColor"/></svg>
             </span>
-            <span class="nav-link-text">Vendors [हॉकर संग्रह]</span>
+            <span class="nav-link-text">Vendor Dispatch</span>
           </button>
 
-          <button class="nav-link" onclick="switchTab('screen-cashbook')">
-            <span class="nav-icon-wrap">
+          <button class="nav-link" onclick="switchTab('screen-cashbook')" title="Cashier Till & Register">
+            <span class="nav-icon-wrap icon-emerald">
               <svg viewBox="0 0 24 24" class="svg-icon"><path d="M21 4H3a2 2 0 00-2 2v12a2 2 0 002 2h18a2 2 0 002-2V6a2 2 0 00-2-2zM3 8h18M7 14h2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
             </span>
-            <span class="nav-link-text">Cash Book [रोकड़ बही]</span>
+            <span class="nav-link-text">Cash Book & Till</span>
           </button>
         </nav>
 
         <div class="nav-section-title">ACCOUNTS & INVENTORY</div>
         <nav class="sidebar-nav">
-          <button class="nav-link" onclick="switchTab('screen-dues')">
-            <span class="nav-icon-wrap">
+          <button class="nav-link" onclick="switchTab('screen-dues')" title="Credit & Ledger">
+            <span class="nav-icon-wrap icon-amber">
               <svg viewBox="0 0 24 24" class="svg-icon"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
             </span>
-            <span class="nav-link-text">Dues Register [बकाया]</span>
+            <span class="nav-link-text">Customer Dues</span>
           </button>
 
-          <button class="nav-link" onclick="switchTab('screen-stock')">
-            <span class="nav-icon-wrap">
+          <button class="nav-link" onclick="switchTab('screen-stock')" title="Stock Register">
+            <span class="nav-icon-wrap icon-teal">
               <svg viewBox="0 0 24 24" class="svg-icon"><path d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </span>
-            <span class="nav-link-text">Cylinder Stock [स्टॉक]</span>
+            <span class="nav-link-text">Cylinder Stock</span>
           </button>
         </nav>
 
-        <div class="nav-section-title">REPORTS & CLOUD ARCHIVE</div>
+        <div class="nav-section-title">REPORTS & SYSTEM</div>
         <nav class="sidebar-nav">
-          <button class="nav-link" onclick="switchTab('screen-report')">
-            <span class="nav-icon-wrap">
+          <button class="nav-link" onclick="switchTab('screen-report')" title="Daily Sales Sheet">
+            <span class="nav-icon-wrap icon-rose">
               <svg viewBox="0 0 24 24" class="svg-icon"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8zM14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
             </span>
-            <span class="nav-link-text">Daily Report [रिपोर्ट]</span>
+            <span class="nav-link-text">Daily Report</span>
           </button>
 
-          <button class="nav-link" onclick="switchTab('screen-archive')">
-            <span class="nav-icon-wrap">
+          <button class="nav-link" onclick="switchTab('screen-archive')" title="Cloud PDF / Excel Archives">
+            <span class="nav-icon-wrap icon-indigo">
               <svg viewBox="0 0 24 24" class="svg-icon"><path d="M21 8v13H3V8M1 3h22v5H1zM10 12h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
             </span>
-            <span class="nav-link-text">Drive Archives [फ़ाइलें]</span>
+            <span class="nav-link-text">Drive Archives</span>
           </button>
 
-          <button class="nav-link admin-only-item" id="navSidebarAdmin" onclick="switchTab('screen-admin')">
-            <span class="nav-icon-wrap">
+          <button class="nav-link admin-only-item" id="navSidebarAdmin" onclick="switchTab('screen-admin')" title="User Management & Rates">
+            <span class="nav-icon-wrap icon-slate">
               <svg viewBox="0 0 24 24" class="svg-icon"><path d="M12 15a3 3 0 100-6 3 3 0 000 6zM19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
             </span>
-            <span class="nav-link-text">Admin Panel [व्यवस्थापक]</span>
+            <span class="nav-link-text">Admin Settings</span>
           </button>
         </nav>
       </div>
 
-      <!-- Sidebar Footer (Theme Toggle & User Profile) -->
+      <!-- Sidebar Footer -->
       <div class="sidebar-footer">
-        <div class="theme-toggle-row">
-          <span class="theme-label">Theme Mode</span>
-          <button class="theme-toggle-btn" id="sidebarThemeBtn" onclick="toggleTheme()" aria-label="Toggle Theme">
-            <span class="theme-icon sun-icon">☀️ Day</span>
-            <span class="theme-icon moon-icon">🌙 Night</span>
-          </button>
+        <div class="theme-switch-container">
+          <span class="theme-switch-title">Theme</span>
+          <div class="theme-toggle-pill" onclick="toggleTheme()" title="Toggle Day / Dark Mode">
+            <span class="toggle-option light-opt">☀️ Day</span>
+            <span class="toggle-option dark-opt">🌙 Dark</span>
+            <div class="toggle-slider"></div>
+          </div>
         </div>
 
-        <div class="user-profile-badge" id="sidebarUserBadgeBlock">
-          <div class="avatar-circle" id="sidebarAvatar">U</div>
-          <div class="user-meta">
-            <span class="user-title" id="sidebarUserName">User</span>
-            <span class="user-role" id="sidebarUserRole">CASHIER</span>
+        <div class="user-profile-card" id="sidebarUserBadgeBlock">
+          <div class="user-avatar" id="sidebarAvatar">A</div>
+          <div class="user-details">
+            <span class="user-name-text" id="sidebarUserName">Admin</span>
+            <span class="user-role-badge" id="sidebarUserRole">ADMIN</span>
           </div>
-          <button class="logout-mini-btn" onclick="handleLogoutClick()" title="Logout">
+          <button class="btn-icon-logout" onclick="handleLogoutClick()" title="Logout">
             <svg viewBox="0 0 24 24" class="svg-icon"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
           </button>
         </div>
       </div>
     </aside>
 
-    <!-- MAIN APP WRAPPER -->
-    <div class="app-main-wrapper">
+    <!-- MAIN APP CANVAS -->
+    <div class="app-main-canvas">
 
-      <!-- TOP NAVBAR -->
+      <!-- TOP APPLICATION NAVBAR -->
       <header class="app-topbar">
         <div class="topbar-left">
-          <button class="menu-toggle-btn" id="menuToggleBtn" onclick="toggleSidebar()" aria-label="Toggle Sidebar">
-            <svg viewBox="0 0 24 24" class="svg-icon"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+          <!-- Mobile Hamburger -->
+          <button class="topbar-btn-icon menu-btn" onclick="toggleSidebar(true)" aria-label="Open Navigation">
+            <svg viewBox="0 0 24 24" class="svg-icon"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
           </button>
-          <div class="page-title-group">
-            <span class="page-category-label">ERP ROJNAMCHA</span>
-            <h2 class="page-active-heading" id="currentScreenTitle">Daily Overview</h2>
+          
+          <div class="breadcrumbs-group">
+            <span class="brand-tagline">SHIV SHAKTI ERP</span>
+            <h2 class="active-page-title" id="currentScreenTitle">Dashboard Overview</h2>
           </div>
         </div>
 
         <div class="topbar-right">
-          <!-- Quick Theme Toggle in Topbar -->
-          <button class="topbar-icon-btn" onclick="toggleTheme()" id="topbarThemeBtn" title="Toggle Theme (Day / Night)">
+          <!-- Live Date Picker Pill -->
+          <div class="header-date-pill">
+            <svg viewBox="0 0 24 24" class="svg-icon date-icon"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <input type="date" id="globalDatePicker" onchange="onDateChanged()" aria-label="Selected Date">
+          </div>
+
+          <!-- Day / Dark Mode Quick Switch -->
+          <button class="topbar-btn-icon" onclick="toggleTheme()" id="topbarThemeBtn" title="Switch Theme">
             <svg viewBox="0 0 24 24" class="svg-icon theme-sun"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
             <svg viewBox="0 0 24 24" class="svg-icon theme-moon"><path d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" fill="currentColor"/></svg>
           </button>
 
-          <!-- Settings Button -->
-          <button class="topbar-icon-btn" onclick="openApiConfigModal()" title="API Settings">
+          <!-- API Settings Modal Button -->
+          <button class="topbar-btn-icon" onclick="openApiConfigModal()" title="API Configuration">
             <svg viewBox="0 0 24 24" class="svg-icon"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065zM15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
           </button>
-
-          <!-- Date Selector pill in topbar -->
-          <div class="topbar-date-pill">
-            <svg viewBox="0 0 24 24" class="svg-icon small-icon"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-            <input type="date" id="globalDatePicker" onchange="onDateChanged()" aria-label="Change report date">
-          </div>
         </div>
       </header>
 
-      <!-- MAIN CONTENT SCREENS -->
+      <!-- MAIN APP CONTENT -->
       <main class="main-content">
 
         <!-- 1. LOGIN SCREEN -->
         <section id="screen-login" class="screen active">
-          <div class="login-wrapper">
-            <div class="login-glass-card">
-              <div class="login-brand-header">
-                <div class="login-logo-glow">
-                  <span>HP</span>
-                </div>
-                <h2>Shiv Shakti HP Gas</h2>
-                <div class="branch-tag">Pandaul Branch • Daily Rojnamcha ERP</div>
-                <p class="login-tagline">दैनिक रोज़नामचा व राजस्व प्रणाली में लॉगिन करें</p>
+          <div class="login-center-wrapper">
+            <div class="login-card-modern">
+              <div class="login-brand-badge">
+                <span class="hp-emblem-large">HP</span>
               </div>
+              <h2 class="login-heading">Agency Portal Login</h2>
+              <p class="login-subheading">Authorized Access for Shiv Shakti HP Gas (Pandaul)</p>
 
-              <form id="loginForm" onsubmit="handleLoginSubmit(event)">
-                <div class="form-group-premium">
-                  <label for="loginUsername">Username [यूज़रनेम]</label>
-                  <div class="input-with-icon">
+              <form id="loginForm" onsubmit="handleLoginSubmit(event)" class="login-form-inner">
+                <div class="input-field-group">
+                  <label for="loginUsername">Username</label>
+                  <div class="input-icon-box">
                     <svg viewBox="0 0 24 24" class="field-icon"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                    <input type="text" id="loginUsername" class="form-control-premium" placeholder="Enter username (e.g. admin)" required autocomplete="username">
+                    <input type="text" id="loginUsername" class="input-modern" placeholder="Enter username (e.g. admin)" required autocomplete="username">
                   </div>
                 </div>
 
-                <div class="form-group-premium">
-                  <label for="loginPassword">Password [पासवर्ड]</label>
-                  <div class="input-with-icon">
+                <div class="input-field-group">
+                  <label for="loginPassword">Password</label>
+                  <div class="input-icon-box">
                     <svg viewBox="0 0 24 24" class="field-icon"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                    <input type="password" id="loginPassword" class="form-control-premium" placeholder="Enter password" required autocomplete="current-password">
+                    <input type="password" id="loginPassword" class="input-modern" placeholder="Enter password" required autocomplete="current-password">
                   </div>
                 </div>
 
-                <button type="submit" id="btnLoginSubmit" class="btn-gradient-primary btn-block">
-                  <span>Secure Login [लॉगिन करें]</span>
+                <button type="submit" id="btnLoginSubmit" class="btn-erp-primary btn-block">
+                  <span>Sign In to System</span>
                   <svg viewBox="0 0 24 24" class="svg-icon"><path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                 </button>
               </form>
 
-              <div class="login-card-foot">
-                <div class="security-note">
-                  <svg viewBox="0 0 24 24" class="svg-icon tiny-icon"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" stroke="currentColor" stroke-width="2"/></svg>
-                  <span>12-hour encrypted session token with salted SHA-256</span>
-                </div>
-                <a href="javascript:void(0)" class="api-settings-link" onclick="openApiConfigModal()">
-                  Configure Apps Script Web App URL
-                </a>
+              <div class="login-card-footer">
+                <span class="security-shield">🔒 12-Hour Encrypted Session • Salted SHA-256</span>
+                <a href="javascript:void(0)" onclick="openApiConfigModal()" class="config-link">Configure Web App API URL</a>
               </div>
             </div>
           </div>
         </section>
 
-        <!-- 2. TODAY DASHBOARD SCREEN -->
+        <!-- 2. DASHBOARD SCREEN -->
         <section id="screen-dashboard" class="screen">
-          <!-- Reconciliation Status Banner -->
-          <div id="reconciliationBanner" class="status-banner-premium balanced">
-            <div class="banner-status-content">
-              <div class="status-badge-icon" id="reconIcon">✓</div>
-              <div class="status-text-block">
-                <strong id="reconStatusTitle">Accounts Balanced & Reconciled</strong>
-                <p id="reconStatusDetail">Inflows equal outflows & payments reconcile with billing across Godown and Delivery.</p>
+          <!-- Real-Time Audit Reconciliation Banner -->
+          <div id="reconciliationBanner" class="audit-banner balanced">
+            <div class="audit-banner-left">
+              <div class="audit-icon-badge" id="reconIcon">✓</div>
+              <div class="audit-info">
+                <strong id="reconStatusTitle">All Accounts Balanced & Reconciled</strong>
+                <p id="reconStatusDetail">Billing receipts, counter physical cash, and stock reconcile with master books.</p>
               </div>
             </div>
-            <button class="btn-glass-refresh" onclick="loadDashboardData()" title="Recalculate">
+            <button class="btn-audit-refresh" onclick="loadDashboardData()" title="Recalculate Today's Accounts">
               <svg viewBox="0 0 24 24" class="svg-icon"><path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-              <span>Refresh</span>
+              <span>Refresh Ledger</span>
             </button>
           </div>
 
-          <!-- KPI Cards Grid -->
-          <div class="kpi-grid-premium">
-            <!-- Card 1: Total Billing -->
-            <div class="kpi-card-premium card-billing">
-              <div class="kpi-top-row">
-                <span class="kpi-tag">TOTAL GROSS BILLING</span>
-                <div class="kpi-icon-pill billing-icon">
-                  <svg viewBox="0 0 24 24" class="svg-icon"><path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                </div>
+          <!-- MULTI-COLOR METRIC KPI CARDS -->
+          <div class="metrics-grid">
+            <!-- Metric 1: Total Gross Billing (Blue) -->
+            <div class="metric-card metric-blue">
+              <div class="metric-header">
+                <span class="metric-title">TOTAL GROSS BILLING</span>
+                <div class="metric-icon-bubble">₹</div>
               </div>
-              <div class="kpi-number" id="kpiTotalBilling">₹0.00</div>
-              <div class="kpi-caption">Daily Invoiced Gross Billing + Dues</div>
+              <div class="metric-value font-mono" id="kpiTotalBilling">₹0.00</div>
+              <div class="metric-footer">Daily Invoiced Gross Billing + Dues</div>
             </div>
 
-            <!-- Card 2: Net Cash Inflow -->
-            <div class="kpi-card-premium card-cash">
-              <div class="kpi-top-row">
-                <span class="kpi-tag">NET CASH INFLOW</span>
-                <div class="kpi-icon-pill cash-icon">
-                  <svg viewBox="0 0 24 24" class="svg-icon"><path d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                </div>
+            <!-- Metric 2: Net Cash Inflow (Green) -->
+            <div class="metric-card metric-green">
+              <div class="metric-header">
+                <span class="metric-title">NET CASH INFLOW</span>
+                <div class="metric-icon-bubble">💵</div>
               </div>
-              <div class="kpi-number" id="kpiNetCash">₹0.00</div>
-              <div class="kpi-caption">Counter Cash & Delivery Cash Collected</div>
+              <div class="metric-value font-mono text-emerald" id="kpiNetCash">₹0.00</div>
+              <div class="metric-footer">Counter & Delivery Cash Collected</div>
             </div>
 
-            <!-- Card 3: Digital Collections -->
-            <div class="kpi-card-premium card-digital">
-              <div class="kpi-top-row">
-                <span class="kpi-tag">DIGITAL SETTLEMENTS</span>
-                <div class="kpi-icon-pill digital-icon">
-                  <svg viewBox="0 0 24 24" class="svg-icon"><path d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                </div>
+            <!-- Metric 3: Digital Collections (Purple) -->
+            <div class="metric-card metric-purple">
+              <div class="metric-header">
+                <span class="metric-title">DIGITAL SETTLEMENTS</span>
+                <div class="metric-icon-bubble">📱</div>
               </div>
-              <div class="kpi-number" id="kpiDigital">₹0.00</div>
-              <div class="kpi-caption">UPI + HP Pay + Bank RTGS/NEFT</div>
+              <div class="metric-value font-mono text-purple" id="kpiDigital">₹0.00</div>
+              <div class="metric-footer">UPI + HP Pay + Bank RTGS/NEFT</div>
             </div>
 
-            <!-- Card 4: Outstanding Dues -->
-            <div class="kpi-card-premium card-dues">
-              <div class="kpi-top-row">
-                <span class="kpi-tag">OUTSTANDING DUES</span>
-                <div class="kpi-icon-pill dues-icon">
-                  <svg viewBox="0 0 24 24" class="svg-icon"><path d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                </div>
+            <!-- Metric 4: Outstanding Dues (Amber) -->
+            <div class="metric-card metric-amber">
+              <div class="metric-header">
+                <span class="metric-title">OUTSTANDING DUES</span>
+                <div class="metric-icon-bubble">⚠️</div>
               </div>
-              <div class="kpi-number" id="kpiDues">₹0.00</div>
-              <div class="kpi-caption">Today's Uncollected Credit on Vendors</div>
+              <div class="metric-value font-mono text-amber" id="kpiDues">₹0.00</div>
+              <div class="metric-footer">Uncollected Credit on Delivery Vendors</div>
             </div>
 
-            <!-- Card 5: Cylinders Sold -->
-            <div class="kpi-card-premium card-cylinders">
-              <div class="kpi-top-row">
-                <span class="kpi-tag">CYLINDERS DELIVERED</span>
-                <div class="kpi-icon-pill cylinder-icon">
-                  <svg viewBox="0 0 24 24" class="svg-icon"><path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                </div>
+            <!-- Metric 5: Cylinders Delivered (Teal) -->
+            <div class="metric-card metric-teal">
+              <div class="metric-header">
+                <span class="metric-title">CYLINDERS DELIVERED</span>
+                <div class="metric-icon-bubble">🛢️</div>
               </div>
-              <div class="kpi-number" id="kpiCylinders">0 Pcs</div>
-              <div class="kpi-caption">Delivery (374) + Godown Counter (257)</div>
+              <div class="metric-value font-mono text-teal" id="kpiCylinders">0 Pcs</div>
+              <div class="metric-footer">Delivery Total (374) + Godown (257)</div>
             </div>
 
-            <!-- Card 6: Closing Cash -->
-            <div class="kpi-card-premium card-closing">
-              <div class="kpi-top-row">
-                <span class="kpi-tag">CLOSING CASH IN HAND</span>
-                <div class="kpi-icon-pill closing-icon">
-                  <svg viewBox="0 0 24 24" class="svg-icon"><path d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                </div>
+            <!-- Metric 6: Closing Cash In Hand (Rose/Slate) -->
+            <div class="metric-card metric-rose">
+              <div class="metric-header">
+                <span class="metric-title">CLOSING CASH IN HAND</span>
+                <div class="metric-icon-bubble">💼</div>
               </div>
-              <div class="kpi-number" id="kpiClosingCash">₹0.00</div>
-              <div class="kpi-caption">Actual Cash in Counter Till Box</div>
+              <div class="metric-value font-mono" id="kpiClosingCash">₹0.00</div>
+              <div class="metric-footer">Actual Cash in Physical Till Box</div>
             </div>
           </div>
 
-          <!-- Quick Actions Grid -->
-          <div class="dashboard-action-shelf">
-            <button class="action-tile-btn" onclick="switchTab('screen-entry')">
-              <span class="tile-icon">➕</span>
-              <span class="tile-title">New Entry</span>
-              <span class="tile-sub">Add Sale or Service</span>
-            </button>
-            <button class="action-tile-btn" onclick="switchTab('screen-vendors')">
-              <span class="tile-icon">🚚</span>
-              <span class="tile-title">Vendor Log</span>
-              <span class="tile-sub">Delivery & Godown</span>
-            </button>
-            <button class="action-tile-btn" onclick="switchTab('screen-cashbook')">
-              <span class="tile-icon">💵</span>
-              <span class="tile-title">Cash Book</span>
-              <span class="tile-sub">Expenses & Notes</span>
-            </button>
-            <button class="action-tile-btn" onclick="switchTab('screen-report')">
-              <span class="tile-icon">📄</span>
-              <span class="tile-title">Full Report</span>
-              <span class="tile-sub">Print & Export</span>
-            </button>
+          <!-- QUICK POS & ERP LAUNCHPAD -->
+          <div class="section-title-wrap">
+            <h3 class="section-heading">Quick ERP Launchpad</h3>
+            <span class="section-hint">Instant shortcuts for everyday cashier operations</span>
+          </div>
+
+          <div class="quick-launchpad-grid">
+            <div class="launch-tile" onclick="switchTab('screen-entry')">
+              <div class="tile-icon-box bg-purple-soft">
+                <svg viewBox="0 0 24 24" class="svg-icon"><path d="M12 4v16m8-8H4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+              </div>
+              <div class="tile-text">
+                <strong class="tile-head">New Bill Entry</strong>
+                <span class="tile-desc">Issue domestic refill, commercial, or service</span>
+              </div>
+            </div>
+
+            <div class="launch-tile" onclick="switchTab('screen-vendors')">
+              <div class="tile-icon-box bg-orange-soft">
+                <svg viewBox="0 0 24 24" class="svg-icon"><path d="M1 3h15v13H1zM16 8h4l3 3v5h-7V8zM5.5 19a2.5 2.5 0 100-5 2.5 2.5 0 000 5zm12 0a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" fill="currentColor"/></svg>
+              </div>
+              <div class="tile-text">
+                <strong class="tile-head">Vendor Dispatch</strong>
+                <span class="tile-desc">Log cylinders given & collect cash from hawkers</span>
+              </div>
+            </div>
+
+            <div class="launch-tile" onclick="switchTab('screen-cashbook')">
+              <div class="tile-icon-box bg-emerald-soft">
+                <svg viewBox="0 0 24 24" class="svg-icon"><path d="M21 4H3a2 2 0 00-2 2v12a2 2 0 002 2h18a2 2 0 002-2V6a2 2 0 00-2-2zM3 8h18M7 14h2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              </div>
+              <div class="tile-text">
+                <strong class="tile-head">Till & Cash Book</strong>
+                <span class="tile-desc">Bank deposits, Madhubani branch transfers & notes</span>
+              </div>
+            </div>
+
+            <div class="launch-tile" onclick="switchTab('screen-report')">
+              <div class="tile-icon-box bg-blue-soft">
+                <svg viewBox="0 0 24 24" class="svg-icon"><path d="M14 2H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V8zM14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              </div>
+              <div class="tile-text">
+                <strong class="tile-head">Daily Sales Sheet</strong>
+                <span class="tile-desc">Print exact A4 report and export to Google Drive</span>
+              </div>
+            </div>
           </div>
         </section>
 
-        <!-- 3. ADD ENTRY & TODAY ENTRIES SCREEN -->
+        <!-- 3. BILLING & POS INVOICING SCREEN -->
         <section id="screen-entry" class="screen">
-          <div class="glass-card">
-            <div class="card-header-styled">
+          <div class="erp-card">
+            <div class="erp-card-header">
               <div>
-                <h3 class="card-main-title">Billing & Transaction Entry [बिक्री व खर्च प्रविष्टि]</h3>
-                <p class="card-subtitle">Fast keyboard-friendly entry for Sales, Returns, Deposits, or Services</p>
+                <h3 class="card-title">POS Invoicing & Billing Counter</h3>
+                <p class="card-subtitle">Fast keyboard-driven billing for Cylinders, Accessories, Services & Dues</p>
               </div>
             </div>
 
-            <form id="entryForm" onsubmit="handleEntrySubmit(event)">
-              <div class="form-row-grid">
-                <div class="form-group-premium">
-                  <label for="entryCategory">Category [श्रेणी]</label>
-                  <select id="entryCategory" class="form-control-premium" onchange="onCategoryChanged()" required>
-                    <option value="SALE">SALE [बिक्री]</option>
-                    <option value="RETURN">RETURN [वापसी/बदलाव]</option>
-                    <option value="SECURITY_DEPOSIT">SECURITY DEPOSIT [सिक्योरिटी जमा]</option>
-                    <option value="SD_REFUND">SD REFUND [सिक्योरिटी वापसी]</option>
-                    <option value="SERVICE">SERVICE [सेवा शुल्क/अन्य]</option>
-                    <option value="DUES_RECEIVED">DUES RECEIVED [पिछला बकाया प्राप्त]</option>
+            <form id="entryForm" onsubmit="handleEntrySubmit(event)" class="billing-form-wrapper">
+              <!-- Quick Product Category Pills -->
+              <div class="category-pill-bar">
+                <button type="button" class="cat-pill active" data-cat="SALE" onclick="selectQuickCategory('SALE', this)">Sale / Refill</button>
+                <button type="button" class="cat-pill" data-cat="RETURN" onclick="selectQuickCategory('RETURN', this)">Exchange / Return</button>
+                <button type="button" class="cat-pill" data-cat="SECURITY_DEPOSIT" onclick="selectQuickCategory('SECURITY_DEPOSIT', this)">Security Deposit</button>
+                <button type="button" class="cat-pill" data-cat="SD_REFUND" onclick="selectQuickCategory('SD_REFUND', this)">Deposit Refund</button>
+                <button type="button" class="cat-pill" data-cat="SERVICE" onclick="selectQuickCategory('SERVICE', this)">Services & Charges</button>
+                <button type="button" class="cat-pill" data-cat="DUES_RECEIVED" onclick="selectQuickCategory('DUES_RECEIVED', this)">Dues Recovered</button>
+              </div>
+
+              <!-- Hidden select synced with pills -->
+              <select id="entryCategory" style="display: none;" onchange="onCategoryChanged()">
+                <option value="SALE">SALE</option>
+                <option value="RETURN">RETURN</option>
+                <option value="SECURITY_DEPOSIT">SECURITY_DEPOSIT</option>
+                <option value="SD_REFUND">SD_REFUND</option>
+                <option value="SERVICE">SERVICE</option>
+                <option value="DUES_RECEIVED">DUES_RECEIVED</option>
+              </select>
+
+              <div class="billing-inputs-grid">
+                <div class="input-field-group col-3">
+                  <label for="entryItem">Item / Particulars</label>
+                  <select id="entryItem" class="input-modern" onchange="onItemChanged()" required>
+                    <option value="">-- Select Product / Service --</option>
                   </select>
                 </div>
 
-                <div class="form-group-premium col-span-2">
-                  <label for="entryItem">Item / Particulars [वस्तु / सेवा]</label>
-                  <select id="entryItem" class="form-control-premium" onchange="onItemChanged()" required>
-                    <option value="">-- Select Item --</option>
-                  </select>
+                <div class="input-field-group">
+                  <label for="entryRate">Selling Rate (₹)</label>
+                  <input type="number" id="entryRate" class="input-modern font-mono" step="0.01" inputmode="decimal" oninput="calculateEntryAmount()" required>
                 </div>
 
-                <div class="form-group-premium">
-                  <label for="entryRate">Rate [दर] (₹)</label>
-                  <input type="number" id="entryRate" class="form-control-premium mono-font" step="0.01" inputmode="decimal" oninput="calculateEntryAmount()" required>
+                <div class="input-field-group">
+                  <label for="entryQty">Quantity</label>
+                  <input type="number" id="entryQty" class="input-modern font-mono" value="1" min="1" inputmode="numeric" oninput="calculateEntryAmount()" required>
+                </div>
+
+                <div class="input-field-group col-2">
+                  <label for="entryAmount">Total Bill Amount (₹)</label>
+                  <input type="number" id="entryAmount" class="input-modern font-mono highlight-amount" step="0.01" inputmode="decimal" readonly>
+                </div>
+
+                <div class="input-field-group col-2">
+                  <label for="entryPayMode">Payment Method</label>
+                  <select id="entryPayMode" class="input-modern" onchange="onPayModeChanged()" required>
+                    <option value="CASH">CASH (Counter Till)</option>
+                    <option value="UPI">UPI (QR / Online)</option>
+                    <option value="HP_PAY">HP PAY (Digital Wallet)</option>
+                    <option value="DUES">DUES (Credit Account)</option>
+                    <option value="NEFT">NEFT / RTGS (Bank Transfer)</option>
+                    <option value="SPLIT">SPLIT PAYMENT (Multi-Channel)</option>
+                    <option value="OTHER">OTHER</option>
+                  </select>
                 </div>
               </div>
 
-              <div class="form-row-grid">
-                <div class="form-group-premium">
-                  <label for="entryQty">Quantity [मात्रा]</label>
-                  <input type="number" id="entryQty" class="form-control-premium mono-font" value="1" min="1" inputmode="numeric" oninput="calculateEntryAmount()" required>
+              <!-- Split Settlement Panel -->
+              <div id="splitPaymentContainer" class="split-settlement-panel hidden">
+                <div class="split-panel-header">
+                  <h4>Split Payment Settlement Breakdown</h4>
+                  <span class="split-hint">All payment channels must sum exactly to Total Bill Amount</span>
                 </div>
-
-                <div class="form-group-premium col-span-2">
-                  <label for="entryAmount">Total Bill Amount [कुल बिल राशि] (₹)</label>
-                  <input type="number" id="entryAmount" class="form-control-premium mono-font highlight-input" step="0.01" inputmode="decimal" readonly>
-                </div>
-
-                <div class="form-group-premium">
-                  <label for="entryPayMode">Payment Mode [भुगतान विधि]</label>
-                  <select id="entryPayMode" class="form-control-premium" onchange="onPayModeChanged()" required>
-                    <option value="CASH">CASH [नकद]</option>
-                    <option value="UPI">UPI [ऑनलाइन / QR]</option>
-                    <option value="HP_PAY">HP PAY [एचपी पे]</option>
-                    <option value="DUES">DUES [बकाया खाता]</option>
-                    <option value="NEFT">NEFT / RTGS</option>
-                    <option value="SPLIT">SPLIT PAYMENT [मिश्रित]</option>
-                    <option value="OTHER">OTHER [अन्य]</option>
-                  </select>
-                </div>
-              </div>
-
-              <!-- Split Payment Box -->
-              <div id="splitPaymentContainer" class="split-box-premium hidden">
-                <div class="split-box-head">
-                  <h4>Split Payment Settlement [मिश्रित भुगतान विवरण]</h4>
-                  <span class="split-hint">Sum must equal Total Bill Amount</span>
-                </div>
-                <div class="split-fields-grid">
-                  <div class="split-field">
+                <div class="split-inputs-row">
+                  <div class="split-input-box">
                     <label>Cash (₹)</label>
-                    <input type="number" id="splitCash" class="form-control-premium mono-font" value="0" min="0" step="0.01" inputmode="decimal" oninput="updateSplitTotal()">
+                    <input type="number" id="splitCash" class="input-modern font-mono" value="0" min="0" step="0.01" inputmode="decimal" oninput="updateSplitTotal()">
                   </div>
-                  <div class="split-field">
+                  <div class="split-input-box">
                     <label>UPI (₹)</label>
-                    <input type="number" id="splitUpi" class="form-control-premium mono-font" value="0" min="0" step="0.01" inputmode="decimal" oninput="updateSplitTotal()">
+                    <input type="number" id="splitUpi" class="input-modern font-mono" value="0" min="0" step="0.01" inputmode="decimal" oninput="updateSplitTotal()">
                   </div>
-                  <div class="split-field">
+                  <div class="split-input-box">
                     <label>HP Pay (₹)</label>
-                    <input type="number" id="splitHpPay" class="form-control-premium mono-font" value="0" min="0" step="0.01" inputmode="decimal" oninput="updateSplitTotal()">
+                    <input type="number" id="splitHpPay" class="input-modern font-mono" value="0" min="0" step="0.01" inputmode="decimal" oninput="updateSplitTotal()">
                   </div>
-                  <div class="split-field">
+                  <div class="split-input-box">
                     <label>Dues (₹)</label>
-                    <input type="number" id="splitDues" class="form-control-premium mono-font" value="0" min="0" step="0.01" inputmode="decimal" oninput="updateSplitTotal()">
+                    <input type="number" id="splitDues" class="input-modern font-mono" value="0" min="0" step="0.01" inputmode="decimal" oninput="updateSplitTotal()">
                   </div>
-                  <div class="split-field">
-                    <label>Other/NEFT (₹)</label>
-                    <input type="number" id="splitOther" class="form-control-premium mono-font" value="0" min="0" step="0.01" inputmode="decimal" oninput="updateSplitTotal()">
+                  <div class="split-input-box">
+                    <label>NEFT / Other (₹)</label>
+                    <input type="number" id="splitOther" class="input-modern font-mono" value="0" min="0" step="0.01" inputmode="decimal" oninput="updateSplitTotal()">
                   </div>
                 </div>
-                <div class="split-validation-chip" id="splitValidationMsg">
+                <div class="split-badge-status" id="splitValidationMsg">
                   Settled: ₹0.00 / Required: ₹0.00
                 </div>
               </div>
 
-              <div class="form-row-grid">
-                <div class="form-group-premium col-span-2">
-                  <label for="entryParty">Customer / Party Name [ग्राहक / पार्टी का नाम]</label>
-                  <input type="text" id="entryParty" class="form-control-premium" placeholder="e.g. Manish Hotel / Bhawanipur School">
+              <div class="billing-inputs-grid mt-2">
+                <div class="input-field-group col-3">
+                  <label for="entryParty">Customer / Party Name (Optional)</label>
+                  <input type="text" id="entryParty" class="input-modern" placeholder="e.g. Manish Hotel / Bhawanipur School">
                 </div>
-                <div class="form-group-premium col-span-2">
-                  <label for="entryNote">Voucher / Memo / Note [टिप्पणी]</label>
-                  <input type="text" id="entryNote" class="form-control-premium" placeholder="Optional remark or cash memo number">
+                <div class="input-field-group col-3">
+                  <label for="entryNote">Voucher / Memo / Reference Note</label>
+                  <input type="text" id="entryNote" class="input-modern" placeholder="e.g. Cash Memo #4092">
                 </div>
               </div>
 
-              <div class="entry-actions-row">
-                <button type="submit" id="btnSaveEntry" class="btn-gradient-primary">
-                  <span>Save Entry [सेव करें]</span>
+              <div class="billing-actions-bar">
+                <button type="submit" id="btnSaveEntry" class="btn-erp-primary">
+                  <span>Save Bill</span>
                 </button>
-                <button type="button" class="btn-gradient-secondary" onclick="saveAndAddAnother(event)">
-                  <span>Save & Add Another [सेव कर दूसरा जोड़ें]</span>
+                <button type="button" class="btn-erp-secondary" onclick="saveAndAddAnother(event)">
+                  <span>Save & Add Another</span>
                 </button>
-                <button type="button" class="btn-outline-theme" onclick="resetEntryForm()">Reset</button>
+                <button type="button" class="btn-erp-outline" onclick="resetEntryForm()">Clear Form</button>
               </div>
             </form>
           </div>
 
-          <!-- Today's Entries Table Section -->
-          <div class="glass-card mt-4">
-            <div class="card-header-styled">
+          <!-- Today's Invoices Table -->
+          <div class="erp-card mt-4">
+            <div class="erp-card-header">
               <div>
-                <h3 class="card-main-title">Today's Transactions [आज की प्रविष्टियां]</h3>
-                <p class="card-subtitle">Real-time log of records entered for selected date</p>
+                <h3 class="card-title">Today's Transactions Ledger</h3>
+                <p class="card-subtitle">Active bills logged for selected report date</p>
               </div>
-              <span class="count-pill" id="entriesCountBadge">0 entries</span>
+              <span class="badge-pill bg-purple-soft" id="entriesCountBadge">0 bills</span>
             </div>
 
-            <div class="table-responsive-styled">
-              <table class="table-premium" id="entriesTable">
+            <div class="table-responsive-box">
+              <table class="table-modern" id="entriesTable">
                 <thead>
                   <tr>
                     <th>Time</th>
                     <th>Category</th>
-                    <th>Item</th>
+                    <th>Product / Service</th>
                     <th class="text-center">Qty</th>
                     <th class="text-right">Rate</th>
                     <th class="text-right">Amount</th>
-                    <th>Mode</th>
-                    <th>Party</th>
-                    <th>By</th>
+                    <th>Pay Mode</th>
+                    <th>Customer</th>
+                    <th>Operator</th>
                     <th class="text-center">Action</th>
                   </tr>
                 </thead>
                 <tbody id="entriesTableBody">
                   <tr>
-                    <td colspan="10" class="empty-state">No entries recorded for this date.</td>
+                    <td colspan="10" class="empty-state">No bills recorded for this date.</td>
                   </tr>
                 </tbody>
               </table>
@@ -502,44 +518,44 @@
           </div>
         </section>
 
-        <!-- 4. VENDORS RECONCILIATION SCREEN -->
+        <!-- 4. VENDOR DISPATCH SCREEN -->
         <section id="screen-vendors" class="screen">
-          <div class="glass-card">
-            <div class="card-header-styled">
+          <div class="erp-card">
+            <div class="erp-card-header">
               <div>
-                <h3 class="card-main-title">Hawkers & Godown Summary [हॉकर्स व गोदाम संग्रह]</h3>
-                <p class="card-subtitle">Daily 14.2KG cylinder distribution and collections per vendor</p>
+                <h3 class="card-title">Hawkers & Godown Daily Distribution</h3>
+                <p class="card-subtitle">Log 14.2KG gas cylinders given and collect cash, UPI, HP Pay, or dues</p>
               </div>
-              <button class="btn-gradient-primary" onclick="saveVendorLogData()">Save Vendor Logs [सुरक्षित करें]</button>
+              <button class="btn-erp-primary" onclick="saveVendorLogData()">Save Vendor Logs</button>
             </div>
 
-            <div class="vendor-kpi-strip">
-              <div class="vendor-pill">
-                <span class="v-pill-label">Home Delivery Total:</span>
-                <strong class="v-pill-val" id="vendorSumDelivery">0 Cylinders</strong>
+            <div class="dispatch-summary-strip">
+              <div class="dispatch-stat">
+                <span class="stat-label">Home Delivery Total:</span>
+                <strong class="stat-val font-mono" id="vendorSumDelivery">0 Cylinders</strong>
               </div>
-              <div class="vendor-pill">
-                <span class="v-pill-label">Godown Counter:</span>
-                <strong class="v-pill-val" id="vendorSumGodown">0 Cylinders</strong>
+              <div class="dispatch-stat">
+                <span class="stat-label">Godown Counter Total:</span>
+                <strong class="stat-val font-mono" id="vendorSumGodown">0 Cylinders</strong>
               </div>
-              <div class="vendor-pill highlight-pill">
-                <span class="v-pill-label">Grand Total Gas:</span>
-                <strong class="v-pill-val" id="vendorSumGrand">0 Cylinders</strong>
+              <div class="dispatch-stat highlight-stat">
+                <span class="stat-label">Grand Total Cylinders:</span>
+                <strong class="stat-val font-mono" id="vendorSumGrand">0 Cylinders</strong>
               </div>
             </div>
 
-            <div class="table-responsive-styled">
-              <table class="table-premium table-striped" id="vendorLogTable">
+            <div class="table-responsive-box">
+              <table class="table-modern table-grid" id="vendorLogTable">
                 <thead>
                   <tr>
-                    <th style="width: 50px;">S.N.</th>
-                    <th>Vendor Name [हॉकर का नाम]</th>
-                    <th class="text-center">Gas Given [सिलेंडर]</th>
-                    <th class="text-center">Cash [नकद]</th>
-                    <th class="text-center">UPI [ऑनलाइन]</th>
+                    <th style="width: 45px;">#</th>
+                    <th>Hawker Name</th>
+                    <th class="text-center">Gas Given</th>
+                    <th class="text-center">Cash</th>
+                    <th class="text-center">UPI</th>
                     <th class="text-center">HP Pay</th>
-                    <th class="text-center">Dues [बकाया]</th>
-                    <th class="text-center">Audit Status</th>
+                    <th class="text-center">Dues</th>
+                    <th class="text-center">Reconciliation Status</th>
                   </tr>
                 </thead>
                 <tbody id="vendorTableBody"></tbody>
@@ -549,182 +565,187 @@
           </div>
         </section>
 
-        <!-- 5. CASH BOOK SCREEN -->
+        <!-- 5. CASH BOOK & TILL SCREEN -->
         <section id="screen-cashbook" class="screen">
-          <div class="glass-card">
-            <div class="card-header-styled">
+          <div class="erp-card">
+            <div class="erp-card-header">
               <div>
-                <h3 class="card-main-title">Daily Cash Book & Till Reconciliation [दैनिक रोकड़ बही व नोट गणना]</h3>
-                <p class="card-subtitle">Inflows, bank deposits, Madhubani transfers, and physical cash counting</p>
+                <h3 class="card-title">Cash Book & Physical Till Reconciliation</h3>
+                <p class="card-subtitle">Opening balance, bank deposits, Madhubani transfers, and currency note counting</p>
               </div>
-              <button class="btn-gradient-primary" onclick="saveCashbookData()">Save Cash Book [रोकड़ बही सुरक्षित करें]</button>
+              <button class="btn-erp-primary" onclick="saveCashbookData()">Save Cash Book</button>
             </div>
 
-            <div class="cashbook-layout-grid">
-              <!-- Left: Receipts & Payments -->
-              <div class="card-inner-pane">
-                <h4 class="pane-title">Receipts & Payments [आवक व जावक]</h4>
-                <div class="form-group-premium">
-                  <label>Opening Cash Balance [प्रारंभिक नकद शेष] (₹)</label>
-                  <input type="number" id="cbOpeningCash" class="form-control-premium mono-font" step="0.01" inputmode="decimal" oninput="calculateCashBook()">
-                  <small class="field-hint">Auto-fetched from previous day's closing cash.</small>
-                </div>
-                <div class="form-group-premium">
-                  <label>Cash Received from Sales [बिक्री से नकद] (₹)</label>
-                  <input type="number" id="cbCashFromSales" class="form-control-premium mono-font highlight-input" readonly>
+            <div class="cashbook-two-column">
+              <!-- Left Column: Receipts & Payments -->
+              <div class="cash-pane">
+                <h4 class="pane-header">Receipts & Inflow Account</h4>
+                
+                <div class="input-field-group">
+                  <label>Opening Cash Balance (₹)</label>
+                  <input type="number" id="cbOpeningCash" class="input-modern font-mono" step="0.01" inputmode="decimal" oninput="calculateCashBook()">
+                  <small class="field-hint">Auto-fetched from previous day's closing cash balance.</small>
                 </div>
 
-                <div class="divider-dashed"></div>
-                <h5 class="pane-subtitle">Payments / Outflow Particulars [खर्च व स्थानांतरण]</h5>
-
-                <div class="form-group-premium">
-                  <label>Bank Deposit at Pandual [बैंक में जमा] (₹)</label>
-                  <input type="number" id="cbBankDeposit" class="form-control-premium mono-font" step="0.01" inputmode="decimal" oninput="calculateCashBook()">
-                </div>
-                <div class="form-group-premium">
-                  <label>Cash Sent to Madhubani [मधुबनी भेजा गया] (₹)</label>
-                  <input type="number" id="cbCashMadhubani" class="form-control-premium mono-font" step="0.01" inputmode="decimal" oninput="calculateCashBook()">
-                </div>
-                <div class="form-group-premium">
-                  <label>Cash Tfr Thakur Ji [ठाकुर जी स्थानांतरण] (₹)</label>
-                  <input type="number" id="cbCashThakurJi" class="form-control-premium mono-font" step="0.01" inputmode="decimal" oninput="calculateCashBook()">
-                </div>
-                <div class="form-group-premium">
-                  <label>Petty Cash & Misc Expenses [विविध खर्च] (₹)</label>
-                  <input type="number" id="cbPettyExpenses" class="form-control-premium mono-font" step="0.01" inputmode="decimal" oninput="calculateCashBook()">
+                <div class="input-field-group">
+                  <label>Cash Received from Sales & Counter (₹)</label>
+                  <input type="number" id="cbCashFromSales" class="input-modern font-mono highlight-amount" readonly>
                 </div>
 
-                <div class="cash-calc-summary-card">
-                  <div class="calc-row">
-                    <span>Total Inflows & Opening:</span>
-                    <strong id="cbTotalInflow">₹0.00</strong>
+                <div class="pane-divider"></div>
+                <h4 class="pane-header">Payments & Outflow Particulars</h4>
+
+                <div class="input-field-group">
+                  <label>Bank Deposit at Pandual Branch (₹)</label>
+                  <input type="number" id="cbBankDeposit" class="input-modern font-mono" step="0.01" inputmode="decimal" oninput="calculateCashBook()">
+                </div>
+
+                <div class="input-field-group">
+                  <label>Cash Sent to Madhubani Office (₹)</label>
+                  <input type="number" id="cbCashMadhubani" class="input-modern font-mono" step="0.01" inputmode="decimal" oninput="calculateCashBook()">
+                </div>
+
+                <div class="input-field-group">
+                  <label>Cash Transfer Thakur Ji (₹)</label>
+                  <input type="number" id="cbCashThakurJi" class="input-modern font-mono" step="0.01" inputmode="decimal" oninput="calculateCashBook()">
+                </div>
+
+                <div class="input-field-group">
+                  <label>Petty Expenses & Counter Expenses (₹)</label>
+                  <input type="number" id="cbPettyExpenses" class="input-modern font-mono" step="0.01" inputmode="decimal" oninput="calculateCashBook()">
+                </div>
+
+                <div class="cash-summary-box">
+                  <div class="summary-line">
+                    <span>Total Cash Inflow + Opening:</span>
+                    <strong class="font-mono" id="cbTotalInflow">₹0.00</strong>
                   </div>
-                  <div class="calc-row">
-                    <span>Total Outflows (Bank + Tfr + Exp):</span>
-                    <strong id="cbTotalOutflowBefore">₹0.00</strong>
+                  <div class="summary-line">
+                    <span>Total Cash Outflows:</span>
+                    <strong class="font-mono text-amber" id="cbTotalOutflowBefore">₹0.00</strong>
                   </div>
-                  <div class="calc-row grand-calc-row">
+                  <div class="summary-line line-highlight">
                     <span>Computed Book Closing Balance:</span>
-                    <strong id="cbComputedClosing">₹0.00</strong>
+                    <strong class="font-mono text-emerald" id="cbComputedClosing">₹0.00</strong>
                   </div>
                 </div>
               </div>
 
-              <!-- Right: Physical Cash Denominations -->
-              <div class="card-inner-pane">
+              <!-- Right Column: Denominations -->
+              <div class="cash-pane">
                 <div class="pane-header-flex">
-                  <h4 class="pane-title">Physical Denomination [भौतिक नोट गणना]</h4>
-                  <span class="variance-badge" id="denomVarianceBadge">Variance: ₹0.00</span>
+                  <h4 class="pane-header">Physical Till Counting</h4>
+                  <span class="variance-chip font-mono" id="denomVarianceBadge">Variance: ₹0.00</span>
                 </div>
 
-                <div class="table-responsive-styled">
-                  <table class="table-premium table-sm" id="tableDenominations">
+                <div class="table-responsive-box">
+                  <table class="table-modern table-sm" id="tableDenominations">
                     <thead>
                       <tr>
-                        <th>Currency Note / Coin</th>
-                        <th class="text-center" style="width: 100px;">Count (Pcs)</th>
+                        <th>Denomination</th>
+                        <th class="text-center" style="width: 110px;">Note Count</th>
                         <th class="text-right">Value (₹)</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr>
                         <td><strong>₹ 500 Note</strong></td>
-                        <td><input type="number" id="note500" class="denom-input form-control-premium mono-font" min="0" inputmode="numeric" oninput="calculateDenominations()"></td>
-                        <td class="text-right mono-font" id="val500">₹0.00</td>
+                        <td><input type="number" id="note500" class="input-modern font-mono text-center" min="0" inputmode="numeric" oninput="calculateDenominations()"></td>
+                        <td class="text-right font-mono" id="val500">₹0.00</td>
                       </tr>
                       <tr>
                         <td><strong>₹ 200 Note</strong></td>
-                        <td><input type="number" id="note200" class="denom-input form-control-premium mono-font" min="0" inputmode="numeric" oninput="calculateDenominations()"></td>
-                        <td class="text-right mono-font" id="val200">₹0.00</td>
+                        <td><input type="number" id="note200" class="input-modern font-mono text-center" min="0" inputmode="numeric" oninput="calculateDenominations()"></td>
+                        <td class="text-right font-mono" id="val200">₹0.00</td>
                       </tr>
                       <tr>
                         <td><strong>₹ 100 Note</strong></td>
-                        <td><input type="number" id="note100" class="denom-input form-control-premium mono-font" min="0" inputmode="numeric" oninput="calculateDenominations()"></td>
-                        <td class="text-right mono-font" id="val100">₹0.00</td>
+                        <td><input type="number" id="note100" class="input-modern font-mono text-center" min="0" inputmode="numeric" oninput="calculateDenominations()"></td>
+                        <td class="text-right font-mono" id="val100">₹0.00</td>
                       </tr>
                       <tr>
                         <td><strong>₹ 50 Note</strong></td>
-                        <td><input type="number" id="note50" class="denom-input form-control-premium mono-font" min="0" inputmode="numeric" oninput="calculateDenominations()"></td>
-                        <td class="text-right mono-font" id="val50">₹0.00</td>
+                        <td><input type="number" id="note50" class="input-modern font-mono text-center" min="0" inputmode="numeric" oninput="calculateDenominations()"></td>
+                        <td class="text-right font-mono" id="val50">₹0.00</td>
                       </tr>
                       <tr>
                         <td><strong>₹ 20 Note</strong></td>
-                        <td><input type="number" id="note20" class="denom-input form-control-premium mono-font" min="0" inputmode="numeric" oninput="calculateDenominations()"></td>
-                        <td class="text-right mono-font" id="val20">₹0.00</td>
+                        <td><input type="number" id="note20" class="input-modern font-mono text-center" min="0" inputmode="numeric" oninput="calculateDenominations()"></td>
+                        <td class="text-right font-mono" id="val20">₹0.00</td>
                       </tr>
                       <tr>
                         <td><strong>₹ 10 Note</strong></td>
-                        <td><input type="number" id="note10" class="denom-input form-control-premium mono-font" min="0" inputmode="numeric" oninput="calculateDenominations()"></td>
-                        <td class="text-right mono-font" id="val10">₹0.00</td>
+                        <td><input type="number" id="note10" class="input-modern font-mono text-center" min="0" inputmode="numeric" oninput="calculateDenominations()"></td>
+                        <td class="text-right font-mono" id="val10">₹0.00</td>
                       </tr>
                       <tr>
                         <td><strong>₹ 5 Coin/Note</strong></td>
-                        <td><input type="number" id="note5" class="denom-input form-control-premium mono-font" min="0" inputmode="numeric" oninput="calculateDenominations()"></td>
-                        <td class="text-right mono-font" id="val5">₹0.00</td>
+                        <td><input type="number" id="note5" class="input-modern font-mono text-center" min="0" inputmode="numeric" oninput="calculateDenominations()"></td>
+                        <td class="text-right font-mono" id="val5">₹0.00</td>
                       </tr>
                       <tr>
                         <td><strong>₹ 2 Coin/Note</strong></td>
-                        <td><input type="number" id="note2" class="denom-input form-control-premium mono-font" min="0" inputmode="numeric" oninput="calculateDenominations()"></td>
-                        <td class="text-right mono-font" id="val2">₹0.00</td>
+                        <td><input type="number" id="note2" class="input-modern font-mono text-center" min="0" inputmode="numeric" oninput="calculateDenominations()"></td>
+                        <td class="text-right font-mono" id="val2">₹0.00</td>
                       </tr>
                       <tr>
                         <td><strong>₹ 1 Coin/Note</strong></td>
-                        <td><input type="number" id="note1" class="denom-input form-control-premium mono-font" min="0" inputmode="numeric" oninput="calculateDenominations()"></td>
-                        <td class="text-right mono-font" id="val1">₹0.00</td>
+                        <td><input type="number" id="note1" class="input-modern font-mono text-center" min="0" inputmode="numeric" oninput="calculateDenominations()"></td>
+                        <td class="text-right font-mono" id="val1">₹0.00</td>
                       </tr>
                     </tbody>
                     <tfoot>
-                      <tr class="tfoot-highlight">
-                        <th>Total Physical Cash in Till:</th>
-                        <th id="totalNotesCount" class="text-center mono-font">0 Pcs</th>
-                        <th id="totalPhysicalVal" class="text-right mono-font text-success">₹0.00</th>
+                      <tr class="tfoot-sum">
+                        <th>Total Physical Till:</th>
+                        <th id="totalNotesCount" class="text-center font-mono">0 Pcs</th>
+                        <th id="totalPhysicalVal" class="text-right font-mono text-emerald">₹0.00</th>
                       </tr>
                     </tfoot>
                   </table>
                 </div>
 
-                <div class="verdict-banner-premium" id="denomVerdictBox">
+                <div class="verdict-card" id="denomVerdictBox">
                   <span class="verdict-icon" id="denomVerdictIcon">✓</span>
-                  <span class="verdict-text" id="denomVerdictText">Physical notes match book closing balance perfectly!</span>
+                  <span class="verdict-msg" id="denomVerdictText">Physical notes match book closing balance perfectly!</span>
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        <!-- 6. DUES MANAGEMENT SCREEN -->
+        <!-- 6. DUES & CREDIT LEDGER SCREEN -->
         <section id="screen-dues" class="screen">
-          <div class="glass-card">
-            <div class="card-header-styled">
+          <div class="erp-card">
+            <div class="erp-card-header">
               <div>
-                <h3 class="card-main-title">Outstanding Dues & Recoveries [बकाया खाता]</h3>
-                <p class="card-subtitle">Track pending receivables from schools, hotels, and vendors</p>
+                <h3 class="card-title">Customer Dues & Credit Receivables</h3>
+                <p class="card-subtitle">Track pending receivables from schools, hotels, and hawkers</p>
               </div>
-              <button class="btn-gradient-primary" onclick="openAddDueModal()">➕ Add New Due [बकाया जोड़ें]</button>
+              <button class="btn-erp-primary" onclick="openAddDueModal()">+ Add New Due Record</button>
             </div>
 
-            <div class="sub-tab-pill-bar">
-              <button class="sub-pill-btn active" onclick="filterDuesTable('PENDING', this)">Pending Dues [बाकी]</button>
-              <button class="sub-pill-btn" onclick="filterDuesTable('RECOVERED', this)">Recovered [प्राप्त]</button>
-              <button class="sub-pill-btn" onclick="filterDuesTable('ALL', this)">All Records [सभी]</button>
+            <div class="filter-tab-bar">
+              <button class="filter-pill active" onclick="filterDuesTable('PENDING', this)">Pending Dues</button>
+              <button class="filter-pill" onclick="filterDuesTable('RECOVERED', this)">Recovered Records</button>
+              <button class="filter-pill" onclick="filterDuesTable('ALL', this)">All Ledger Entries</button>
             </div>
 
-            <div class="table-responsive-styled">
-              <table class="table-premium" id="duesTable">
+            <div class="table-responsive-box">
+              <table class="table-modern" id="duesTable">
                 <thead>
                   <tr>
                     <th>Date</th>
-                    <th>Party / Customer Name</th>
+                    <th>Customer / Party Name</th>
                     <th>Bill Date</th>
-                    <th class="text-right">Amount (₹)</th>
+                    <th class="text-right">Pending Amount</th>
                     <th>Status</th>
-                    <th>Recovered Date</th>
+                    <th>Settled Date</th>
                     <th class="text-center">Action</th>
                   </tr>
                 </thead>
                 <tbody id="duesTableBody">
                   <tr>
-                    <td colspan="7" class="empty-state">Loading dues records...</td>
+                    <td colspan="7" class="empty-state">Loading dues ledger...</td>
                   </tr>
                 </tbody>
               </table>
@@ -732,36 +753,36 @@
           </div>
         </section>
 
-        <!-- 7. STOCK MANAGEMENT SCREEN -->
+        <!-- 7. STOCK & INVENTORY SCREEN -->
         <section id="screen-stock" class="screen">
-          <div class="glass-card">
-            <div class="card-header-styled">
+          <div class="erp-card">
+            <div class="erp-card-header">
               <div>
-                <h3 class="card-main-title">Daily Cylinder Stock Balance [सिलेंडर स्टॉक विवरण]</h3>
-                <p class="card-subtitle">Filled cylinders opening/receipts and customer empty circulation</p>
+                <h3 class="card-title">Daily Cylinder Inventory & Movement</h3>
+                <p class="card-subtitle">Filled cylinders opening/receipts and customer empty cylinder circulation</p>
               </div>
-              <button class="btn-gradient-primary" onclick="saveStockData()">Save Stock [स्टॉक सुरक्षित करें]</button>
+              <button class="btn-erp-primary" onclick="saveStockData()">Save Stock</button>
             </div>
 
-            <div class="table-responsive-styled">
-              <table class="table-premium table-bordered" id="stockTable">
+            <div class="table-responsive-box">
+              <table class="table-modern table-bordered" id="stockTable">
                 <thead>
                   <tr>
                     <th rowspan="2">Cylinder Type</th>
-                    <th colspan="5" class="text-center th-filled">FILLED STOCK [भरा हुआ स्टॉक]</th>
-                    <th colspan="5" class="text-center th-empty">EMPTY STOCK [खाली स्टॉक]</th>
+                    <th colspan="5" class="text-center col-filled">FILLED STOCK</th>
+                    <th colspan="5" class="text-center col-empty">EMPTY STOCK</th>
                   </tr>
                   <tr>
                     <th class="text-center">Opening</th>
                     <th class="text-center">HPCL Recd</th>
                     <th class="text-center">Delivered</th>
                     <th class="text-center">Adj.</th>
-                    <th class="text-center">Closing Filled</th>
+                    <th class="text-center font-bold">Closing Filled</th>
                     <th class="text-center">Opening</th>
-                    <th class="text-center">Customer Empty</th>
+                    <th class="text-center">Customer Recd</th>
                     <th class="text-center">Other Ret.</th>
-                    <th class="text-center">To Plant</th>
-                    <th class="text-center">Closing Empty</th>
+                    <th class="text-center">Sent to Plant</th>
+                    <th class="text-center font-bold">Closing Empty</th>
                   </tr>
                 </thead>
                 <tbody id="stockTableBody"></tbody>
@@ -773,32 +794,32 @@
 
         <!-- 8. REPORT PREVIEW SCREEN -->
         <section id="screen-report" class="screen">
-          <div class="glass-card">
-            <div class="card-header-styled">
+          <div class="erp-card">
+            <div class="erp-card-header">
               <div>
-                <h3 class="card-main-title">Official Daily Report Preview [दैनिक रिपोर्ट प्रारूप]</h3>
+                <h3 class="card-title">Official Daily Report Sheet (Print Format)</h3>
                 <p class="card-subtitle">Exact layout matching the master A4 printable spreadsheet</p>
               </div>
-              <div class="btn-cluster">
-                <button class="btn-gradient-secondary" onclick="generateDailyArchive()">
-                  <svg viewBox="0 0 24 24" class="svg-icon small-icon"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              <div class="btn-group-cluster">
+                <button class="btn-erp-secondary" onclick="generateDailyArchive()">
+                  <svg viewBox="0 0 24 24" class="svg-icon"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
                   <span>Export PDF & Excel</span>
                 </button>
-                <button class="btn-gradient-primary" onclick="printReport()">
-                  <svg viewBox="0 0 24 24" class="svg-icon small-icon"><path d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                  <span>Print Report</span>
+                <button class="btn-erp-primary" onclick="printReport()">
+                  <svg viewBox="0 0 24 24" class="svg-icon"><path d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4H7v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                  <span>Print Sheet</span>
                 </button>
               </div>
             </div>
 
-            <div class="sub-tab-pill-bar">
-              <button class="sub-pill-btn active" onclick="switchReportTab('report-view-sales', this)">1. Daily Sales & Revenue</button>
-              <button class="sub-pill-btn" onclick="switchReportTab('report-view-cash', this)">2. Cash & Collection</button>
-              <button class="sub-pill-btn" onclick="switchReportTab('report-view-vendor', this)">3. Collection Summary</button>
-              <button class="sub-pill-btn" onclick="switchReportTab('report-view-stock', this)">4. Cylinder Stock</button>
+            <div class="filter-tab-bar">
+              <button class="filter-pill active" onclick="switchReportTab('report-view-sales', this)">1. Daily Sales & Revenue</button>
+              <button class="filter-pill" onclick="switchReportTab('report-view-cash', this)">2. Cash & Collection</button>
+              <button class="filter-pill" onclick="switchReportTab('report-view-vendor', this)">3. Collection Summary</button>
+              <button class="filter-pill" onclick="switchReportTab('report-view-stock', this)">4. Cylinder Stock</button>
             </div>
 
-            <div id="report-sheet-container" class="report-render-box-styled">
+            <div id="report-sheet-container" class="report-render-canvas">
               <div id="report-view-sales" class="report-view active"></div>
               <div id="report-view-cash" class="report-view"></div>
               <div id="report-view-vendor" class="report-view"></div>
@@ -809,23 +830,23 @@
 
         <!-- 9. ARCHIVES SCREEN -->
         <section id="screen-archive" class="screen">
-          <div class="glass-card">
-            <div class="card-header-styled">
+          <div class="erp-card">
+            <div class="erp-card-header">
               <div>
-                <h3 class="card-main-title">Daily Archives on Google Drive [संग्रहीत रिपोर्ट फ़ाइलें]</h3>
-                <p class="card-subtitle">Permanent repository of generated daily PDFs and Excel workbooks</p>
+                <h3 class="card-title">Google Drive Daily Archives</h3>
+                <p class="card-subtitle">Permanent cloud archive of past daily PDFs and Excel workbooks</p>
               </div>
-              <button class="btn-outline-theme" onclick="loadArchivesList()">Refresh Archive List</button>
+              <button class="btn-erp-outline" onclick="loadArchivesList()">Refresh Archive List</button>
             </div>
 
-            <div class="table-responsive-styled">
-              <table class="table-premium" id="archivesTable">
+            <div class="table-responsive-box">
+              <table class="table-modern" id="archivesTable">
                 <thead>
                   <tr>
                     <th>Report Date</th>
                     <th>File Name</th>
                     <th>Generated At</th>
-                    <th>By User</th>
+                    <th>Operator</th>
                     <th class="text-center">Download Actions</th>
                   </tr>
                 </thead>
@@ -839,30 +860,30 @@
           </div>
         </section>
 
-        <!-- 10. ADMIN MANAGEMENT SCREEN -->
+        <!-- 10. ADMIN & SETTINGS SCREEN -->
         <section id="screen-admin" class="screen">
-          <div class="glass-card">
-            <div class="card-header-styled">
+          <div class="erp-card">
+            <div class="erp-card-header">
               <div>
-                <h3 class="card-main-title">Administration & System Masters [प्रशासन व मास्टर प्रबंधन]</h3>
-                <p class="card-subtitle">Manage cashier logins, catalog selling rates, and vendors</p>
+                <h3 class="card-title">System Administration & Masters</h3>
+                <p class="card-subtitle">Manage cashier user logins, selling prices, and system audit logs</p>
               </div>
             </div>
 
-            <div class="sub-tab-pill-bar">
-              <button class="sub-pill-btn active" onclick="switchAdminTab('admin-tab-users', this)">Staff Users [उपयोगकर्ता]</button>
-              <button class="sub-pill-btn" onclick="switchAdminTab('admin-tab-rates', this)">Catalog Rates [दर सूची]</button>
-              <button class="sub-pill-btn" onclick="switchAdminTab('admin-tab-audit', this)">Audit Log [ऑडिट]</button>
+            <div class="filter-tab-bar">
+              <button class="filter-pill active" onclick="switchAdminTab('admin-tab-users', this)">Staff Accounts</button>
+              <button class="filter-pill" onclick="switchAdminTab('admin-tab-rates', this)">Selling Rates</button>
+              <button class="filter-pill" onclick="switchAdminTab('admin-tab-audit', this)">Audit Trail</button>
             </div>
 
             <!-- Users Tab -->
             <div id="admin-tab-users" class="admin-tab active">
-              <div class="pane-header-flex mb-3">
-                <h4 class="pane-title">Authorized Staff Logins</h4>
-                <button class="btn-gradient-primary btn-sm" onclick="openCreateUserModal()">➕ Create Staff User</button>
+              <div class="tab-subhead">
+                <h4>Authorized Staff User Accounts</h4>
+                <button class="btn-erp-primary btn-sm" onclick="openCreateUserModal()">+ Create New User</button>
               </div>
-              <div class="table-responsive-styled">
-                <table class="table-premium" id="adminUsersTable">
+              <div class="table-responsive-box">
+                <table class="table-modern" id="adminUsersTable">
                   <thead>
                     <tr>
                       <th>Username</th>
@@ -879,17 +900,17 @@
 
             <!-- Rates Tab -->
             <div id="admin-tab-rates" class="admin-tab">
-              <div class="pane-header-flex mb-3">
-                <h4 class="pane-title">Live Selling Prices & Service Fees</h4>
-                <button class="btn-gradient-primary btn-sm" onclick="saveAdminRates()">Save Updated Rates</button>
+              <div class="tab-subhead">
+                <h4>Active Catalog Rates & Service Fees</h4>
+                <button class="btn-erp-primary btn-sm" onclick="saveAdminRates()">Save Updated Rates</button>
               </div>
-              <div class="table-responsive-styled">
-                <table class="table-premium" id="adminRatesTable">
+              <div class="table-responsive-box">
+                <table class="table-modern" id="adminRatesTable">
                   <thead>
                     <tr>
-                      <th>Item / Service</th>
+                      <th>Product / Service</th>
                       <th>Category</th>
-                      <th style="width: 140px;">Rate (₹)</th>
+                      <th style="width: 150px;">Rate (₹)</th>
                       <th class="text-center" style="width: 80px;">Active</th>
                     </tr>
                   </thead>
@@ -900,11 +921,11 @@
 
             <!-- Audit Tab -->
             <div id="admin-tab-audit" class="admin-tab">
-              <h4 class="pane-title">Security & Action Audit Log</h4>
-              <p class="card-subtitle">Every operation with timestamp and user is logged to the AUDIT_LOG Google Sheet tab.</p>
-              <div class="audit-callout">
+              <h4 class="tab-subhead-title">System Security & Mutation Audit Log</h4>
+              <p class="card-subtitle">Every operation with timestamp, user, and payload is logged to the AUDIT_LOG Google Sheet tab.</p>
+              <div class="audit-callout-box">
                 <svg viewBox="0 0 24 24" class="svg-icon"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-                <span>Audit logging is actively recording in Google Sheet tab <strong>AUDIT_LOG</strong>.</span>
+                <span>Live audit logging is active and synchronized to Google Sheets.</span>
               </div>
             </div>
           </div>
@@ -914,31 +935,27 @@
     </div>
   </div>
 
-  <!-- STICKY MOBILE NAVIGATION (Bottom Bar) -->
-  <nav class="bottom-nav-premium" id="bottomNav" style="display: none;">
-    <button class="bottom-nav-item active" onclick="switchTab('screen-dashboard')">
-      <svg viewBox="0 0 24 24" class="bottom-nav-icon"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" fill="currentColor"/></svg>
-      <span>Today</span>
+  <!-- STICKY MOBILE NAVIGATION (ONLY VISIBLE ON MOBILE <= 768px) -->
+  <nav class="bottom-nav-mobile" id="bottomNav" style="display: none;">
+    <button class="mobile-nav-item active" onclick="switchTab('screen-dashboard')">
+      <svg viewBox="0 0 24 24" class="svg-icon"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z" fill="currentColor"/></svg>
+      <span>Dashboard</span>
     </button>
-    <button class="bottom-nav-item" onclick="switchTab('screen-entry')">
-      <svg viewBox="0 0 24 24" class="bottom-nav-icon"><path d="M12 4v16m8-8H4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
-      <span>Entry</span>
+    <button class="mobile-nav-item" onclick="switchTab('screen-entry')">
+      <svg viewBox="0 0 24 24" class="svg-icon"><path d="M12 4v16m8-8H4" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+      <span>Billing</span>
     </button>
-    <button class="bottom-nav-item" onclick="switchTab('screen-vendors')">
-      <svg viewBox="0 0 24 24" class="bottom-nav-icon"><path d="M1 3h15v13H1zM16 8h4l3 3v5h-7V8zM5.5 19a2.5 2.5 0 100-5 2.5 2.5 0 000 5zm12 0a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" fill="currentColor"/></svg>
+    <button class="mobile-nav-item" onclick="switchTab('screen-vendors')">
+      <svg viewBox="0 0 24 24" class="svg-icon"><path d="M1 3h15v13H1zM16 8h4l3 3v5h-7V8zM5.5 19a2.5 2.5 0 100-5 2.5 2.5 0 000 5zm12 0a2.5 2.5 0 100-5 2.5 2.5 0 000 5z" fill="currentColor"/></svg>
       <span>Vendors</span>
     </button>
-    <button class="bottom-nav-item" onclick="switchTab('screen-cashbook')">
-      <svg viewBox="0 0 24 24" class="bottom-nav-icon"><path d="M21 4H3a2 2 0 00-2 2v12a2 2 0 002 2h18a2 2 0 002-2V6a2 2 0 00-2-2zM3 8h18M7 14h2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    <button class="mobile-nav-item" onclick="switchTab('screen-cashbook')">
+      <svg viewBox="0 0 24 24" class="svg-icon"><path d="M21 4H3a2 2 0 00-2 2v12a2 2 0 002 2h18a2 2 0 002-2V6a2 2 0 00-2-2zM3 8h18M7 14h2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
       <span>Cash</span>
     </button>
-    <button class="bottom-nav-item" onclick="switchTab('screen-report')">
-      <svg viewBox="0 0 24 24" class="bottom-nav-icon"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8zM14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-      <span>Report</span>
-    </button>
-    <button class="bottom-nav-item" onclick="toggleSidebar(true)">
-      <svg viewBox="0 0 24 24" class="bottom-nav-icon"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
-      <span>More</span>
+    <button class="mobile-nav-item" onclick="toggleSidebar(true)">
+      <svg viewBox="0 0 24 24" class="svg-icon"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+      <span>Menu</span>
     </button>
   </nav>
 
@@ -946,27 +963,27 @@
 
   <!-- Add Due Modal -->
   <div id="modalAddDue" class="modal-overlay hidden">
-    <div class="modal-card-premium">
+    <div class="modal-box">
       <div class="modal-head">
-        <h3>Add Customer Due [बकाया जोड़ें]</h3>
+        <h3>Add Customer Due</h3>
         <button class="modal-close-btn" onclick="closeModal('modalAddDue')">&times;</button>
       </div>
       <form onsubmit="handleAddDueSubmit(event)">
-        <div class="form-group-premium">
-          <label>Party / Customer Name</label>
-          <input type="text" id="dueParty" class="form-control-premium" placeholder="e.g. Bhawanipur School" required>
+        <div class="input-field-group">
+          <label>Customer / Party Name</label>
+          <input type="text" id="dueParty" class="input-modern" placeholder="e.g. Bhawanipur School" required>
         </div>
-        <div class="form-group-premium">
+        <div class="input-field-group">
           <label>Amount (₹)</label>
-          <input type="number" id="dueAmount" class="form-control-premium mono-font" step="0.01" inputmode="decimal" required>
+          <input type="number" id="dueAmount" class="input-modern font-mono" step="0.01" inputmode="decimal" required>
         </div>
-        <div class="form-group-premium">
+        <div class="input-field-group">
           <label>Bill Date</label>
-          <input type="date" id="dueBillDate" class="form-control-premium" required>
+          <input type="date" id="dueBillDate" class="input-modern" required>
         </div>
         <div class="modal-foot">
-          <button type="button" class="btn-outline-theme" onclick="closeModal('modalAddDue')">Cancel</button>
-          <button type="submit" class="btn-gradient-primary">Save Due</button>
+          <button type="button" class="btn-erp-outline" onclick="closeModal('modalAddDue')">Cancel</button>
+          <button type="submit" class="btn-erp-primary">Save Due Record</button>
         </div>
       </form>
     </div>
@@ -974,32 +991,32 @@
 
   <!-- Recover Due Modal -->
   <div id="modalRecoverDue" class="modal-overlay hidden">
-    <div class="modal-card-premium">
+    <div class="modal-box">
       <div class="modal-head">
-        <h3>Recover Due [बकाया वसूली]</h3>
+        <h3>Recover Customer Due</h3>
         <button class="modal-close-btn" onclick="closeModal('modalRecoverDue')">&times;</button>
       </div>
       <form onsubmit="handleRecoverDueSubmit(event)">
         <input type="hidden" id="recoverDueRowId">
-        <div class="form-group-premium">
+        <div class="input-field-group">
           <label>Party Name</label>
-          <input type="text" id="recoverPartyName" class="form-control-premium" readonly>
+          <input type="text" id="recoverPartyName" class="input-modern" readonly>
         </div>
-        <div class="form-group-premium">
+        <div class="input-field-group">
           <label>Settlement Amount (₹)</label>
-          <input type="number" id="recoverAmount" class="form-control-premium mono-font highlight-input" readonly>
+          <input type="number" id="recoverAmount" class="input-modern font-mono highlight-amount" readonly>
         </div>
-        <div class="form-group-premium">
-          <label>Payment Mode Received</label>
-          <select id="recoverPayMode" class="form-control-premium" required>
-            <option value="CASH">CASH [नकद]</option>
-            <option value="UPI">UPI [ऑनलाइन]</option>
+        <div class="input-field-group">
+          <label>Payment Method</label>
+          <select id="recoverPayMode" class="input-modern" required>
+            <option value="CASH">CASH (Till)</option>
+            <option value="UPI">UPI (Online)</option>
             <option value="NEFT">NEFT / RTGS</option>
           </select>
         </div>
         <div class="modal-foot">
-          <button type="button" class="btn-outline-theme" onclick="closeModal('modalRecoverDue')">Cancel</button>
-          <button type="submit" class="btn-gradient-primary">Confirm Recovery</button>
+          <button type="button" class="btn-erp-outline" onclick="closeModal('modalRecoverDue')">Cancel</button>
+          <button type="submit" class="btn-erp-primary">Confirm Recovery</button>
         </div>
       </form>
     </div>
@@ -1007,30 +1024,30 @@
 
   <!-- Create User Modal -->
   <div id="modalCreateUser" class="modal-overlay hidden">
-    <div class="modal-card-premium">
+    <div class="modal-box">
       <div class="modal-head">
         <h3>Create Staff User</h3>
         <button class="modal-close-btn" onclick="closeModal('modalCreateUser')">&times;</button>
       </div>
       <form onsubmit="handleCreateUserSubmit(event)">
-        <div class="form-group-premium">
+        <div class="input-field-group">
           <label>Username</label>
-          <input type="text" id="newUsername" class="form-control-premium" required>
+          <input type="text" id="newUsername" class="input-modern" required>
         </div>
-        <div class="form-group-premium">
+        <div class="input-field-group">
           <label>Password</label>
-          <input type="password" id="newPassword" class="form-control-premium" required>
+          <input type="password" id="newPassword" class="input-modern" required>
         </div>
-        <div class="form-group-premium">
+        <div class="input-field-group">
           <label>Role</label>
-          <select id="newRole" class="form-control-premium">
-            <option value="cashier">Cashier [कैशियर]</option>
-            <option value="admin">Administrator [व्यवस्थापक]</option>
+          <select id="newRole" class="input-modern">
+            <option value="cashier">Cashier</option>
+            <option value="admin">Administrator</option>
           </select>
         </div>
         <div class="modal-foot">
-          <button type="button" class="btn-outline-theme" onclick="closeModal('modalCreateUser')">Cancel</button>
-          <button type="submit" class="btn-gradient-primary">Create User</button>
+          <button type="button" class="btn-erp-outline" onclick="closeModal('modalCreateUser')">Cancel</button>
+          <button type="submit" class="btn-erp-primary">Create User</button>
         </div>
       </form>
     </div>
@@ -1038,19 +1055,19 @@
 
   <!-- API Settings Modal -->
   <div id="modalApiConfig" class="modal-overlay hidden">
-    <div class="modal-card-premium">
+    <div class="modal-box">
       <div class="modal-head">
         <h3>Backend API Configuration</h3>
         <button class="modal-close-btn" onclick="closeModal('modalApiConfig')">&times;</button>
       </div>
-      <div class="form-group-premium">
+      <div class="input-field-group">
         <label>Direct Google Apps Script Web App URL</label>
-        <input type="url" id="customApiUrl" class="form-control-premium mono-font" placeholder="https://script.google.com/macros/s/.../exec">
-        <small class="field-hint">If deployed on Netlify, leave empty to automatically proxy via <code>/api</code>.</small>
+        <input type="url" id="customApiUrl" class="input-modern font-mono" placeholder="https://script.google.com/macros/s/.../exec">
+        <small class="field-hint">When deployed on Netlify, leave empty to automatically proxy requests via <code>/api</code>.</small>
       </div>
       <div class="modal-foot">
-        <button type="button" class="btn-outline-theme" onclick="closeModal('modalApiConfig')">Cancel</button>
-        <button type="submit" class="btn-gradient-primary" onclick="saveApiConfig()">Save Configuration</button>
+        <button type="button" class="btn-erp-outline" onclick="closeModal('modalApiConfig')">Cancel</button>
+        <button type="submit" class="btn-erp-primary" onclick="saveApiConfig()">Save Configuration</button>
       </div>
     </div>
   </div>
