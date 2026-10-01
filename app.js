@@ -177,9 +177,14 @@ function applyAuthUI(isLoggedIn) {
   const sidebarAvatar = document.getElementById('sidebarAvatar');
 
   if (isLoggedIn && state.user) {
+    document.body.classList.remove('user-logged-out');
+    document.body.classList.add('user-logged-in');
+
     // Only show bottomNav on mobile (<= 768px)
     if (bottomNav && window.innerWidth <= 768) {
       bottomNav.style.display = 'flex';
+    } else if (bottomNav) {
+      bottomNav.style.display = 'none';
     }
     if (sidebarUserName) sidebarUserName.textContent = state.user.username;
     if (sidebarUserRole) sidebarUserRole.textContent = (state.user.role || 'cashier').toUpperCase();
@@ -189,6 +194,8 @@ function applyAuthUI(isLoggedIn) {
       sidebarAdminItem.style.display = (state.user.role === 'admin') ? 'flex' : 'none';
     }
   } else {
+    document.body.classList.remove('user-logged-in');
+    document.body.classList.add('user-logged-out');
     if (bottomNav) bottomNav.style.display = 'none';
   }
 }
@@ -299,6 +306,12 @@ async function handleLogoutClick() {
     localStorage.removeItem('ss_user');
     state.token = null;
     state.user = null;
+
+    const uInput = document.getElementById('loginUsername');
+    const pInput = document.getElementById('loginPassword');
+    if (uInput) uInput.value = '';
+    if (pInput) pInput.value = '';
+
     applyAuthUI(false);
     switchTab('screen-login');
     showToast('Logged out successfully.', 'info');
@@ -340,6 +353,14 @@ async function fetchMetadata() {
 function switchTab(screenId) {
   if (!state.token && screenId !== 'screen-login') {
     screenId = 'screen-login';
+  }
+
+  if (screenId === 'screen-login') {
+    document.body.classList.remove('user-logged-in');
+    document.body.classList.add('user-logged-out');
+  } else if (state.token) {
+    document.body.classList.remove('user-logged-out');
+    document.body.classList.add('user-logged-in');
   }
 
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
