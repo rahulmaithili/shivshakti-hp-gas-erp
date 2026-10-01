@@ -21,18 +21,10 @@ exports.handler = async function (event, context) {
     };
   }
 
-  const scriptUrl = process.env.APPS_SCRIPT_URL || process.env.GAS_WEBAPP_URL;
-
-  if (!scriptUrl) {
-    return {
-      statusCode: 500,
-      headers: headers,
-      body: JSON.stringify({
-        ok: false,
-        error: 'Proxy Error: APPS_SCRIPT_URL environment variable is not configured in Netlify.'
-      })
-    };
-  }
+  const scriptUrl =
+    process.env.APPS_SCRIPT_URL ||
+    process.env.GAS_WEBAPP_URL ||
+    'https://script.google.com/macros/s/AKfycbxnNUYfRxB_gMNx3Y-2OX5GEBvj2gRJuT1MomxlZZ8U-jWLkH_0e_VZ3NcyZtG8lhIieg/exec';
 
   try {
     let payload = event.body || '{}';
