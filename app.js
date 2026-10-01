@@ -342,7 +342,7 @@ async function fetchMetadata() {
       cylinderTypes: DEFAULT_CYLINDER_TYPES
     };
   }
-  populateEntryItems();
+  initPosLineItems();
 }
 
 /**
@@ -392,8 +392,8 @@ function switchTab(screenId) {
   if (screenId === 'screen-dashboard') {
     loadDashboardData();
   } else if (screenId === 'screen-entry') {
+    initPosLineItems();
     loadTodayEntries();
-    populateEntryItems();
   } else if (screenId === 'screen-vendors') {
     loadVendorLogData();
   } else if (screenId === 'screen-cashbook') {
@@ -457,12 +457,60 @@ async function loadDashboardData() {
  * 3. POS INVOICING & BILLING
  * ============================================================================
  */
+/**
+ * ============================================================================
+ * 3. POS INVOICING & MULTI-ITEM BILLING COUNTER
+ * ============================================================================
+ */
+const MASTER_ITEM_CATALOG = [
+  // 1. Refills & Commercial Cylinders
+  { id: '142_gd', item: '14.2KG Domestic (Godown)', label: '14.2 KG REFILLING GD (Godown)', category: 'SALE', rate: 1042 },
+  { id: '142_hd', item: '14.2KG Domestic (Home Delivery)', label: '14.2 KG REFILLING HD (Home Delivery)', category: 'SALE', rate: 1042 },
+  { id: '19_nd', item: '19KG Commercial', label: '19 KG ND REFILL (Commercial)', category: 'SALE', rate: 3049 },
+  { id: '5_nd', item: '5 Kg Nd Rfl', label: '5 KG ND REFILL', category: 'SALE', rate: 845 },
+  { id: '2_ftl', item: '2 Kg Nd FTL', label: '2 KG ND FTL', category: 'SALE', rate: 450 },
+  { id: '142_refill', item: '14.2KG Domestic Gas Refill', label: '14.2KG Domestic Gas Refill', category: 'SALE', rate: 903 },
+
+  // 2. Security Deposits (New Connection / SV)
+  { id: 'sd_cyl', item: '14.2KG Domestic', label: '14.2 KG ND SECURITY DEPOSIT (Cylinder)', category: 'SECURITY_DEPOSIT', rate: 2200 },
+  { id: 'sd_reg', item: 'Regulator', label: 'Regulator Security Deposit (A-065767)', category: 'SECURITY_DEPOSIT', rate: 250 },
+  { id: 'sd_19', item: '19KG Commercial', label: '19 KG ND SECURITY DEPOSIT', category: 'SECURITY_DEPOSIT', rate: 2400 },
+
+  // 3. Accessories & Appliances
+  { id: 'pipe', item: 'Suraksha Hose Pipe', label: 'Suraksha Hose Pipe (Rubber Tube)', category: 'SALE', rate: 190 },
+  { id: 'reg_leak', item: 'Domestic Regulator (Leak/Defective)', label: 'Domestic Regulator (Leak / Replacement)', category: 'SALE', rate: 100 },
+  { id: 'reg_ftl', item: 'Ftl Rgulator', label: 'FTL Regulator', category: 'SALE', rate: 350 },
+  { id: 'dgc', item: 'Domestic Pass Book', label: 'Domestic Pass Book (D.G.C.)', category: 'SALE', rate: 59 },
+  { id: 'pmuy_pb', item: 'PMUY Pass Book', label: 'PMUY Pass Book', category: 'SALE', rate: 25 },
+  { id: 'stove', item: 'Hot Plate', label: 'Hot Plate (Gas Stove)', category: 'SALE', rate: 2350 },
+
+  // 4. Service Charges & Administrative Fees
+  { id: 'srv_adm', item: 'Administration Charge', label: 'Administration Charge / Connection Fee', category: 'SERVICE', rate: 118 },
+  { id: 'srv_name', item: 'Name change (Death)', label: 'Name Change (Transfer / Death)', category: 'SERVICE', rate: 118 },
+  { id: 'srv_truck', item: 'Truck Opening Charges', label: 'Truck Opening Charges (Handling)', category: 'SERVICE', rate: 200 },
+  { id: 'srv_safe', item: 'Safety inspection', label: 'Safety Inspection / Mechanic Visit', category: 'SERVICE', rate: 236 },
+
+  // 5. Refunds & Deposit Outflows
+  { id: 'rfnd_tv', item: 'TV Out / Deposit Refund', label: 'TV Out / Deposit Refund (14.2KG)', category: 'SD_REFUND', rate: 0 },
+  { id: 'rfnd_5k', item: '5 Kg ftl Security Refund', label: '5 KG FTL Security Refund', category: 'SD_REFUND', rate: 800 },
+
+  // 6. Defective Returns / Exchanges
+  { id: 'ret_142', item: '14.2KG Domestic (Defective / Leaking)', label: '14.2KG Defective / Leaking (Return)', category: 'RETURN', rate: 1042 },
+  { id: 'ret_19', item: '19KG Commercial (Return / Exchange)', label: '19KG Commercial Return / Exchange', category: 'RETURN', rate: 3049 },
+  { id: 'ret_acc', item: 'Domestic Regulator / Pipe (Return)', label: 'Regulator / Pipe Return (Defect)', category: 'RETURN', rate: 0 },
+
+  // 7. Previous Outstanding Dues Recovered
+  { id: 'dues_rec', item: 'Previous Outstanding Dues Received', label: 'Previous Outstanding Dues Recovered', category: 'DUES_RECEIVED', rate: 0 }
+];
+
+let posRowCounter = 0;
+
 function selectQuickCategory(category, btn) {
   document.querySelectorAll('.category-pill-bar .cat-pill').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
 
   const catSelect = document.getElementById('entryCategory');
-  catSelect.value = category;
+  if (catSelect) catSelect.value = category;
   onCategoryChanged();
 }
 
@@ -476,44 +524,188 @@ function onCategoryChanged() {
       ncBanner.classList.add('hidden');
     }
   }
-  populateEntryItems();
 }
 
-function populateEntryItems() {
-  const category = document.getElementById('entryCategory').value;
-  const itemSelect = document.getElementById('entryItem');
-  itemSelect.innerHTML = '<option value="">-- Select Product / Service --</option>';
+function initPosLineItems() {
+  const tbody = document.getElementById('posLineItemsBody');
+  if (tbody && tbody.children.length === 0) {
+    addPosItemRow();
+  }
+}
 
-  const filteredRates = state.meta.rates.filter(r => r.category === category);
-  filteredRates.forEach(r => {
-    const opt = document.createElement('option');
-    opt.value = r.item;
-    opt.textContent = `${r.item} (₹${r.rate})`;
-    opt.dataset.rate = r.rate;
-    itemSelect.appendChild(opt);
+function buildItemOptionsHtml(selectedItem = '') {
+  let html = '<option value="">Select or type details...</option>';
+
+  const groups = [
+    { label: 'Cylinder Refills & Commercial', cat: ['SALE'], filter: it => it.category === 'SALE' && (it.item.includes('KG') || it.item.includes('Refill') || it.item.includes('Rfl')) },
+    { label: 'Security Deposits (New Connection / SV)', cat: ['SECURITY_DEPOSIT'], filter: it => it.category === 'SECURITY_DEPOSIT' },
+    { label: 'Accessories & Appliances', cat: ['SALE'], filter: it => it.category === 'SALE' && !(it.item.includes('KG') || it.item.includes('Refill') || it.item.includes('Rfl')) },
+    { label: 'Service Charges & Handling Fees', cat: ['SERVICE'], filter: it => it.category === 'SERVICE' },
+    { label: 'Defective Returns & Refunds', cat: ['RETURN', 'SD_REFUND'], filter: it => it.category === 'RETURN' || it.category === 'SD_REFUND' },
+    { label: 'Dues Recovery', cat: ['DUES_RECEIVED'], filter: it => it.category === 'DUES_RECEIVED' }
+  ];
+
+  groups.forEach(g => {
+    const items = MASTER_ITEM_CATALOG.filter(g.filter);
+    if (items.length > 0) {
+      html += `<optgroup label="${g.label}">`;
+      items.forEach(it => {
+        const isSel = (selectedItem === it.item || selectedItem === it.label) ? 'selected' : '';
+        html += `<option value="${escapeHtml(it.item)}" data-rate="${it.rate}" data-category="${it.category}" data-sheetitem="${escapeHtml(it.item)}" ${isSel}>${escapeHtml(it.label)} (₹${it.rate.toFixed(2)})</option>`;
+      });
+      html += `</optgroup>`;
+    }
   });
 
-  onItemChanged();
+  return html;
 }
 
-function onItemChanged() {
-  const itemSelect = document.getElementById('entryItem');
-  const selectedOpt = itemSelect.options[itemSelect.selectedIndex];
-  const rateInput = document.getElementById('entryRate');
+function addPosItemRow(prefill = null) {
+  const tbody = document.getElementById('posLineItemsBody');
+  if (!tbody) return;
 
-  if (selectedOpt && selectedOpt.dataset.rate !== undefined) {
-    rateInput.value = selectedOpt.dataset.rate;
+  posRowCounter++;
+  const rowId = `pos_row_${posRowCounter}`;
+  const tr = document.createElement('tr');
+  tr.id = rowId;
+
+  const itemVal = prefill ? (prefill.sheetItem || prefill.item) : '';
+  const rateVal = prefill ? (prefill.rate !== undefined ? prefill.rate : 0) : 0;
+  const qtyVal = prefill ? (prefill.qty !== undefined ? prefill.qty : 1) : 1;
+  const amtVal = Math.round(rateVal * qtyVal * 100) / 100;
+
+  tr.innerHTML = `
+    <td>
+      <select class="row-item-select" onchange="onPosItemSelect(this)">
+        ${buildItemOptionsHtml(itemVal)}
+      </select>
+    </td>
+    <td>
+      <input type="number" class="row-rate input-modern font-mono text-right" step="0.01" min="0" value="${rateVal.toFixed(2)}" oninput="onPosRowValueChange(this)">
+    </td>
+    <td>
+      <input type="number" class="row-qty input-modern font-mono text-center" min="1" step="1" value="${qtyVal}" oninput="onPosRowValueChange(this)">
+    </td>
+    <td class="text-right">
+      <span class="row-amount font-mono font-bold">${formatINR(amtVal)}</span>
+    </td>
+    <td class="text-center">
+      <button type="button" class="btn-row-del" onclick="deletePosItemRow(this)" title="Delete Row">🗑</button>
+    </td>
+  `;
+
+  tbody.appendChild(tr);
+
+  if (prefill && itemVal) {
+    const sel = tr.querySelector('.row-item-select');
+    if (sel) sel.value = itemVal;
   }
-  calculateEntryAmount();
+
+  calculatePosTotal();
 }
 
-function calculateEntryAmount() {
-  const qty = parseFloat(document.getElementById('entryQty').value) || 0;
-  const rate = parseFloat(document.getElementById('entryRate').value) || 0;
-  const total = qty * rate;
-  document.getElementById('entryAmount').value = total.toFixed(2);
+function onPosItemSelect(selectEl) {
+  const tr = selectEl.closest('tr');
+  if (!tr) return;
 
-  // Auto-preset Cash if others are zero or empty
+  const opt = selectEl.options[selectEl.selectedIndex];
+  const rateInput = tr.querySelector('.row-rate');
+  const qtyInput = tr.querySelector('.row-qty');
+  const amtSpan = tr.querySelector('.row-amount');
+
+  if (opt && opt.value) {
+    const rate = parseFloat(opt.dataset.rate) || 0;
+    if (rateInput) rateInput.value = rate.toFixed(2);
+    const qty = parseFloat(qtyInput?.value) || 1;
+    if (amtSpan) amtSpan.textContent = formatINR(rate * qty);
+  } else {
+    if (rateInput) rateInput.value = '0.00';
+    if (amtSpan) amtSpan.textContent = '₹0.00';
+  }
+
+  calculatePosTotal();
+}
+
+function onPosRowValueChange(inputEl) {
+  const tr = inputEl.closest('tr');
+  if (!tr) return;
+
+  const rate = parseFloat(tr.querySelector('.row-rate')?.value) || 0;
+  const qty = parseFloat(tr.querySelector('.row-qty')?.value) || 0;
+  const amtSpan = tr.querySelector('.row-amount');
+
+  if (amtSpan) {
+    amtSpan.textContent = formatINR(rate * qty);
+  }
+
+  calculatePosTotal();
+}
+
+function deletePosItemRow(btnEl) {
+  const tr = btnEl.closest('tr');
+  if (!tr) return;
+
+  tr.remove();
+
+  const tbody = document.getElementById('posLineItemsBody');
+  if (tbody && tbody.children.length === 0) {
+    addPosItemRow();
+  }
+
+  calculatePosTotal();
+}
+
+function resetPosItemRows() {
+  const tbody = document.getElementById('posLineItemsBody');
+  if (tbody) tbody.innerHTML = '';
+  addPosItemRow();
+  calculatePosTotal();
+}
+
+function loadNewConnectionBundleToTable() {
+  const tbody = document.getElementById('posLineItemsBody');
+  if (tbody) tbody.innerHTML = '';
+
+  const bundleItems = [
+    { sheetItem: '14.2KG Domestic', label: '14.2 KG ND SECURITY DEPOSIT (Cylinder)', category: 'SECURITY_DEPOSIT', rate: 2200, qty: 1 },
+    { sheetItem: 'Regulator', label: 'Regulator Security Deposit (A-065767)', category: 'SECURITY_DEPOSIT', rate: 250, qty: 1 },
+    { sheetItem: 'Administration Charge', label: 'Administration Charge / Connection Fee', category: 'SERVICE', rate: 118, qty: 1 },
+    { sheetItem: 'Suraksha Hose Pipe', label: 'Suraksha Hose Pipe (Rubber Tube)', category: 'SALE', rate: 190, qty: 1 },
+    { sheetItem: 'Domestic Pass Book', label: 'Domestic Pass Book (D.G.C.)', category: 'SALE', rate: 59, qty: 1 },
+    { sheetItem: 'Hot Plate', label: 'Hot Plate (Gas Stove)', category: 'SALE', rate: 2350, qty: 1 },
+    { sheetItem: '14.2KG Domestic Gas Refill', label: '14.2KG Domestic Gas Refill', category: 'SALE', rate: 903, qty: 1 }
+  ];
+
+  bundleItems.forEach(item => {
+    addPosItemRow(item);
+  });
+
+  calculatePosTotal();
+  applyPresetSettlement('CASH');
+  showToast('✨ 14.2KG New Connection Package (7 items, ₹6,070.00) loaded into table!', 'success');
+}
+
+function calculatePosTotal() {
+  let total = 0;
+  const rows = document.querySelectorAll('#posLineItemsBody tr');
+
+  rows.forEach(tr => {
+    const sel = tr.querySelector('.row-item-select');
+    if (sel && sel.value) {
+      const rate = parseFloat(tr.querySelector('.row-rate')?.value) || 0;
+      const qty = parseFloat(tr.querySelector('.row-qty')?.value) || 0;
+      total += (rate * qty);
+    }
+  });
+
+  total = Math.round(total * 100) / 100;
+
+  const totalDisp = document.getElementById('posLineItemsTotal');
+  const entryAmt = document.getElementById('entryAmount');
+  if (totalDisp) totalDisp.textContent = formatINR(total);
+  if (entryAmt) entryAmt.value = total.toFixed(2);
+
+  // Auto preset Cash if others are zero
   const upi = parseFloat(document.getElementById('settleUpi')?.value) || 0;
   const hpPay = parseFloat(document.getElementById('settleHpPay')?.value) || 0;
   const dues = parseFloat(document.getElementById('settleDues')?.value) || 0;
@@ -528,7 +720,7 @@ function calculateEntryAmount() {
 }
 
 function applyPresetSettlement(mode) {
-  const total = parseFloat(document.getElementById('entryAmount').value) || 0;
+  const total = parseFloat(document.getElementById('entryAmount')?.value) || 0;
 
   const cashEl = document.getElementById('settleCash');
   const upiEl = document.getElementById('settleUpi');
@@ -621,21 +813,32 @@ async function saveAndAddAnother(e) {
 }
 
 async function submitEntryData(isAddAnother = false) {
-  const category = document.getElementById('entryCategory').value;
-  const item = document.getElementById('entryItem').value;
-  const qty = parseFloat(document.getElementById('entryQty').value) || 0;
-  const rate = parseFloat(document.getElementById('entryRate').value) || 0;
-  const amount = parseFloat(document.getElementById('entryAmount').value) || 0;
-  const party = document.getElementById('entryParty').value.trim();
-  const note = document.getElementById('entryNote').value.trim();
-  const saveBtn = document.getElementById('btnSaveEntry');
+  const rows = document.querySelectorAll('#posLineItemsBody tr');
+  const validItems = [];
 
-  if (!item) {
-    showToast('Please select a product or service item.', 'warning');
-    return;
-  }
-  if (qty <= 0 && category !== 'RETURN' && category !== 'DUES_RECEIVED') {
-    showToast('Quantity must be greater than zero.', 'warning');
+  rows.forEach(tr => {
+    const sel = tr.querySelector('.row-item-select');
+    if (!sel || !sel.value) return;
+    const opt = sel.options[sel.selectedIndex];
+    const rate = parseFloat(tr.querySelector('.row-rate')?.value) || 0;
+    const qty = parseFloat(tr.querySelector('.row-qty')?.value) || 0;
+    const amount = Math.round(rate * qty * 100) / 100;
+    const sheetItem = opt.dataset.sheetitem || sel.value;
+    const category = opt.dataset.category || 'SALE';
+    const label = opt.textContent;
+
+    validItems.push({
+      item: sheetItem,
+      label: label,
+      category: category,
+      rate: rate,
+      qty: qty,
+      amount: amount
+    });
+  });
+
+  if (validItems.length === 0) {
+    showToast('Please select at least one item from the details dropdown.', 'warning');
     return;
   }
 
@@ -649,52 +852,46 @@ async function submitEntryData(isAddAnother = false) {
     return;
   }
 
+  const party = (document.getElementById('entryParty')?.value || '').trim();
+  const note = (document.getElementById('entryNote')?.value || '').trim();
+
   if (settlement.payments.DUES > 0 && !party) {
     showToast('Customer / Party name is required when billing on Dues (credit account).', 'warning');
-    document.getElementById('entryParty').focus();
+    document.getElementById('entryParty')?.focus();
     return;
   }
 
-  // Determine primary mode for reference
-  let primaryMode = 'CASH';
-  if (settlement.payments.DUES > 0) primaryMode = 'DUES';
-  else if (settlement.payments.UPI > 0 && settlement.payments.CASH === 0) primaryMode = 'UPI';
-  else if (settlement.payments.HP_PAY > 0 && settlement.payments.CASH === 0) primaryMode = 'HP_PAY';
-  else if (settlement.payments.OTHER > 0 && settlement.payments.CASH === 0) primaryMode = 'OTHER';
-  else if (Object.values(settlement.payments).filter(v => v > 0).length > 1) primaryMode = 'SPLIT';
-
+  const saveBtn = document.getElementById('btnSaveEntry');
   saveBtn.disabled = true;
   saveBtn.innerHTML = '<span>Saving...</span>';
 
   try {
-    const entryPayload = {
+    const packagePayload = {
       date: state.currentDate,
-      category: category,
-      item: item,
-      qty: qty,
-      rate: rate,
-      amount: amount,
-      payMode: primaryMode,
       party: party,
-      note: note,
+      svNumber: note,
+      items: validItems,
       payments: settlement.payments
     };
 
-    await apiCall('addEntry', { entry: entryPayload });
-    showToast('Bill saved successfully!', 'success');
+    await apiCall('issueNewConnectionPackage', { packageData: packagePayload });
+    showToast(`Bill saved successfully (${validItems.length} items, ₹${settlement.totalAmount.toFixed(2)})!`, 'success');
 
     if (isAddAnother) {
-      document.getElementById('entryQty').value = '1';
-      document.getElementById('entryParty').value = '';
-      document.getElementById('entryNote').value = '';
-      calculateEntryAmount();
+      resetPosItemRows();
+      const pInput = document.getElementById('entryParty');
+      if (pInput) pInput.value = '';
+      const nInput = document.getElementById('entryNote');
+      if (nInput) nInput.value = '';
     } else {
       resetEntryForm();
     }
 
-    loadTodayEntries();
-    loadDashboardData();
+    await loadTodayEntries();
+    await loadDashboardData();
   } catch (err) {
+    console.error(err);
+    showToast(err.message || 'Failed to save bill.', 'error');
   } finally {
     saveBtn.disabled = false;
     saveBtn.innerHTML = '<span>Save Bill</span>';
@@ -702,14 +899,26 @@ async function submitEntryData(isAddAnother = false) {
 }
 
 function resetEntryForm() {
-  document.getElementById('entryForm').reset();
-  document.getElementById('entryQty').value = '1';
-  document.getElementById('settleCash').value = '0';
-  document.getElementById('settleUpi').value = '0';
-  document.getElementById('settleHpPay').value = '0';
-  document.getElementById('settleDues').value = '0';
-  document.getElementById('settleOther').value = '0';
-  populateEntryItems();
+  const form = document.getElementById('entryForm');
+  if (form) form.reset();
+  const pInput = document.getElementById('entryParty');
+  if (pInput) pInput.value = '';
+  const nInput = document.getElementById('entryNote');
+  if (nInput) nInput.value = '';
+
+  const cashEl = document.getElementById('settleCash');
+  const upiEl = document.getElementById('settleUpi');
+  const hpEl = document.getElementById('settleHpPay');
+  const duesEl = document.getElementById('settleDues');
+  const otherEl = document.getElementById('settleOther');
+
+  if (cashEl) cashEl.value = '0';
+  if (upiEl) upiEl.value = '0';
+  if (hpEl) hpEl.value = '0';
+  if (duesEl) duesEl.value = '0';
+  if (otherEl) otherEl.value = '0';
+
+  resetPosItemRows();
 }
 
 async function loadTodayEntries() {
@@ -896,8 +1105,9 @@ async function handleNewConnectionSubmit(e) {
   const party = (document.getElementById('ncCustomerName')?.value || '').trim();
   const svNumber = (document.getElementById('ncSvNumber')?.value || '').trim();
 
-  if (!party) {
-    showToast('Please enter Consumer / Customer Name.', 'warning');
+  const settlement = onNcSettlementChanged();
+  if (settlement.payments.DUES > 0 && !party) {
+    showToast('Customer / Party name is required when billing on Dues (credit account).', 'warning');
     document.getElementById('ncCustomerName')?.focus();
     return;
   }
@@ -923,7 +1133,7 @@ async function handleNewConnectionSubmit(e) {
     return;
   }
 
-  const settlement = onNcSettlementChanged();
+  settlement = onNcSettlementChanged();
   if (!settlement.isBalanced) {
     if (settlement.diff > 0) {
       showToast(`Settlement mismatch: Please allocate ₹${settlement.diff.toFixed(2)} across payment modes.`, 'error');

@@ -377,36 +377,38 @@
                 <h3 class="card-title">POS Invoicing & Billing Counter</h3>
                 <p class="card-subtitle">Fast keyboard-driven billing for Cylinders, Accessories, Services & Dues</p>
               </div>
-              <button type="button" class="btn-new-connection-badge" onclick="openNewConnectionModal()">
+              <button type="button" class="btn-new-connection-badge" onclick="loadNewConnectionBundleToTable()">
                 <span>✨</span>
-                <span>14.2KG New Connection Package (SV)</span>
+                <span>Load 14.2KG New Connection (7 Items)</span>
               </button>
             </div>
 
             <form id="entryForm" onsubmit="handleEntrySubmit(event)" class="billing-form-wrapper">
-              <!-- Quick Product Category Pills -->
+              <!-- Quick Product Category Filter Pills -->
               <div class="category-pill-bar">
-                <button type="button" class="cat-pill active" data-cat="SALE" onclick="selectQuickCategory('SALE', this)">Sale / Refill</button>
-                <button type="button" class="cat-pill" data-cat="RETURN" onclick="selectQuickCategory('RETURN', this)">Exchange / Return</button>
+                <button type="button" class="cat-pill active" data-cat="ALL" onclick="selectQuickCategory('ALL', this)">All Items</button>
+                <button type="button" class="cat-pill" data-cat="SALE" onclick="selectQuickCategory('SALE', this)">Sale / Refill</button>
                 <button type="button" class="cat-pill" data-cat="SECURITY_DEPOSIT" onclick="selectQuickCategory('SECURITY_DEPOSIT', this)">Security Deposit</button>
-                <button type="button" class="cat-pill" data-cat="SD_REFUND" onclick="selectQuickCategory('SD_REFUND', this)">Deposit Refund</button>
                 <button type="button" class="cat-pill" data-cat="SERVICE" onclick="selectQuickCategory('SERVICE', this)">Services & Charges</button>
+                <button type="button" class="cat-pill" data-cat="RETURN" onclick="selectQuickCategory('RETURN', this)">Exchange / Return</button>
+                <button type="button" class="cat-pill" data-cat="SD_REFUND" onclick="selectQuickCategory('SD_REFUND', this)">Deposit Refund</button>
                 <button type="button" class="cat-pill" data-cat="DUES_RECEIVED" onclick="selectQuickCategory('DUES_RECEIVED', this)">Dues Recovered</button>
               </div>
 
-              <!-- Quick SV Package Banner (shows when Security Deposit category is active) -->
+              <!-- Quick SV Package Banner -->
               <div id="ncQuickBanner" class="package-prompt-strip hidden">
                 <div class="package-prompt-content">
                   <strong>📦 14.2KG Domestic SV New Connection?</strong>
                   <span>Auto-bundles 7 items: Cylinder Security, Regulator, Admin Fee, Pipe, Passbook, Stove & Gas.</span>
                 </div>
-                <button type="button" class="btn-erp-primary btn-sm" onclick="openNewConnectionModal()">
-                  <span>Issue 7-Item Package</span>
+                <button type="button" class="btn-erp-primary btn-sm" onclick="loadNewConnectionBundleToTable()">
+                  <span>+ Load 7-Item Bundle</span>
                 </button>
               </div>
 
-              <!-- Hidden select synced with pills -->
+              <!-- Hidden category select synced with pills -->
               <select id="entryCategory" style="display: none;" onchange="onCategoryChanged()">
+                <option value="ALL">ALL</option>
                 <option value="SALE">SALE</option>
                 <option value="RETURN">RETURN</option>
                 <option value="SECURITY_DEPOSIT">SECURITY_DEPOSIT</option>
@@ -415,31 +417,45 @@
                 <option value="DUES_RECEIVED">DUES_RECEIVED</option>
               </select>
 
-              <div class="billing-inputs-grid">
-                <div class="input-field-group col-3">
-                  <label for="entryItem">Item / Particulars</label>
-                  <select id="entryItem" class="input-modern" onchange="onItemChanged()" required>
-                    <option value="">-- Select Product / Service --</option>
-                  </select>
-                </div>
+              <!-- Dynamic POS Line Items Table (Matches Image 2) -->
+              <div class="pos-items-table-wrapper mb-3">
+                <table class="pos-line-items-table" id="posLineItemsTable">
+                  <thead>
+                    <tr>
+                      <th style="width: 44%;">DETAILS</th>
+                      <th style="width: 18%;" class="text-right">RATE (₹)</th>
+                      <th style="width: 14%;" class="text-center">QTY</th>
+                      <th style="width: 18%;" class="text-right">AMOUNT</th>
+                      <th style="width: 6%;" class="text-center">ACTION</th>
+                    </tr>
+                  </thead>
+                  <tbody id="posLineItemsBody">
+                    <!-- Dynamic Rows populated by JS -->
+                  </tbody>
+                  <tfoot>
+                    <tr class="pos-table-footer-row">
+                      <td colspan="3" class="text-right font-bold">TOTAL BILL AMOUNT:</td>
+                      <td class="text-right font-mono font-bold text-primary" id="posLineItemsTotal">₹0.00</td>
+                      <td></td>
+                    </tr>
+                  </tfoot>
+                </table>
 
-                <div class="input-field-group">
-                  <label for="entryRate">Selling Rate (₹)</label>
-                  <input type="number" id="entryRate" class="input-modern font-mono" step="0.01" inputmode="decimal" oninput="calculateEntryAmount()" required>
-                </div>
-
-                <div class="input-field-group">
-                  <label for="entryQty">Quantity</label>
-                  <input type="number" id="entryQty" class="input-modern font-mono" value="1" min="1" inputmode="numeric" oninput="calculateEntryAmount()" required>
-                </div>
-
-                <div class="input-field-group col-2">
-                  <label for="entryAmount">Total Bill Amount (₹)</label>
-                  <input type="number" id="entryAmount" class="input-modern font-mono highlight-amount" step="0.01" inputmode="decimal" readonly>
+                <div class="pos-table-btn-bar">
+                  <button type="button" class="btn-add-receipt-row" onclick="addPosItemRow()">
+                    <span>+ Add Item Row</span>
+                  </button>
+                  <button type="button" class="btn-preset-bundle-load" onclick="loadNewConnectionBundleToTable()">
+                    <span>✨ Load 14.2KG New Connection (7 Items)</span>
+                  </button>
+                  <button type="button" class="btn-clear-table" onclick="resetPosItemRows()">
+                    <span>Clear Rows</span>
+                  </button>
                 </div>
               </div>
 
-              <!-- Hidden input for backward compatibility -->
+              <!-- Hidden fields for backward compatibility -->
+              <input type="hidden" id="entryAmount" value="0">
               <input type="hidden" id="entryPayMode" value="CASH">
 
               <!-- POS PAYMENT SETTLEMENT SECTION (5 MODES) -->
@@ -1117,15 +1133,15 @@
         <button class="modal-close-btn" onclick="closeModal('modalNewConnectionPackage')">&times;</button>
       </div>
       <form id="newConnectionPackageForm" onsubmit="handleNewConnectionSubmit(event)">
-        <!-- Consumer Details -->
+        <!-- Optional Details -->
         <div class="billing-inputs-grid mb-3">
           <div class="input-field-group col-3">
-            <label for="ncCustomerName">Consumer / Customer Name <span class="text-danger">*</span></label>
-            <input type="text" id="ncCustomerName" class="input-modern" placeholder="e.g. Ramesh Kumar / Smt. Sunita Devi" required>
+            <label for="ncCustomerName">Customer / Party Name (Optional)</label>
+            <input type="text" id="ncCustomerName" class="input-modern" placeholder="e.g. Ramesh Kumar (Optional)">
           </div>
           <div class="input-field-group col-3">
-            <label for="ncSvNumber">SV / Subscription Voucher No.</label>
-            <input type="text" id="ncSvNumber" class="input-modern" placeholder="e.g. SV-2026-081 / Consumer #20419">
+            <label for="ncSvNumber">SV / Subscription Voucher No. (Optional)</label>
+            <input type="text" id="ncSvNumber" class="input-modern" placeholder="e.g. SV # / Reference (Optional)">
           </div>
         </div>
 

@@ -124,7 +124,7 @@ function doPost(e) {
     // Acquire ScriptLock for state-mutating actions to prevent concurrency issues
     const isWriteAction = [
       'addEntry', 'updateEntry', 'deleteEntry', 'saveVendorLog', 'saveCashbook',
-      'saveStock', 'addDue', 'recoverDue', 'generateArchive', 'issueNewConnectionPackage',
+      'saveStock', 'addDue', 'recoverDue', 'generateArchive', 'issueNewConnectionPackage', 'saveInvoice',
       'adminCreateUser', 'adminSetActive', 'adminResetPassword', 'adminUpdateRates',
       'adminManageVendors'
     ].includes(action);
@@ -205,6 +205,7 @@ function doPost(e) {
           break;
 
         case 'issueNewConnectionPackage':
+        case 'saveInvoice':
           response = handleIssueNewConnectionPackage(payload.packageData, user);
           break;
 
@@ -620,7 +621,7 @@ function handleIssueNewConnectionPackage(pkgData, user) {
     const itemRate = Number(itemObj.rate) || itemAmount;
     const itemCategory = String(itemObj.category || 'SALE').trim();
     const itemName = String(itemObj.item || '').trim();
-    const memo = svNumber ? `SV #${svNumber} [${itemObj.label || itemName}]` : `[${itemObj.label || itemName}]`;
+    const memo = svNumber ? `SV #${svNumber} [${itemObj.label || itemName}]` : (itemObj.note || itemObj.label || '');
 
     if (singleMode) {
       const id = Utilities.getUuid();
