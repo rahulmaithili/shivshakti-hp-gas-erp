@@ -96,6 +96,13 @@
             </span>
             <span class="nav-link-text">Cylinder Stock</span>
           </button>
+
+          <button class="nav-link" onclick="openRatesManager()" title="Manage Products, Items & Rates">
+            <span class="nav-icon-wrap icon-amber">
+              <svg viewBox="0 0 24 24" class="svg-icon"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <span class="nav-link-text">Items & Rates Master</span>
+          </button>
         </nav>
 
         <div class="nav-section-title">REPORTS & SYSTEM</div>
@@ -377,10 +384,15 @@
                 <h3 class="card-title">POS Invoicing & Billing Counter</h3>
                 <p class="card-subtitle">Fast keyboard-driven billing for Cylinders, Accessories, Services & Dues</p>
               </div>
-              <button type="button" class="btn-new-connection-badge" onclick="loadNewConnectionBundleToTable()">
-                <span>✨</span>
-                <span>Load 14.2KG New Connection (7 Items)</span>
-              </button>
+              <div class="btn-group-cluster">
+                <button type="button" class="btn-erp-outline btn-sm" onclick="openRatesManager()" title="Create, edit, or delete catalog items">
+                  <span>⚙️ Manage Items & Rates</span>
+                </button>
+                <button type="button" class="btn-new-connection-badge" onclick="loadNewConnectionBundleToTable()">
+                  <span>✨</span>
+                  <span>Load 14.2KG New Connection (7 Items)</span>
+                </button>
+              </div>
             </div>
 
             <form id="entryForm" onsubmit="handleEntrySubmit(event)" class="billing-form-wrapper">
@@ -967,20 +979,32 @@
               </div>
             </div>
 
-            <!-- Rates Tab -->
+            <!-- Rates Tab (Items & Selling Rates Master) -->
             <div id="admin-tab-rates" class="admin-tab">
               <div class="tab-subhead">
-                <h4>Active Catalog Rates & Service Fees</h4>
-                <button class="btn-erp-primary btn-sm" onclick="saveAdminRates()">Save Updated Rates</button>
+                <div>
+                  <h4>Items & Selling Rates Master Catalog</h4>
+                  <p class="card-subtitle">Create new items, edit selling rates, or delete products and services</p>
+                </div>
+                <div class="btn-group-cluster">
+                  <button type="button" class="btn-erp-secondary btn-sm" onclick="addAdminRateRow()">
+                    <span>+ Add New Product</span>
+                  </button>
+                  <button type="button" class="btn-erp-primary btn-sm" onclick="saveAdminRates()">
+                    <span>Save Items & Rates</span>
+                  </button>
+                </div>
               </div>
               <div class="table-responsive-box">
                 <table class="table-modern" id="adminRatesTable">
                   <thead>
                     <tr>
-                      <th>Product / Service</th>
-                      <th>Category</th>
-                      <th style="width: 150px;">Rate (₹)</th>
+                      <th style="width: 45px;">#</th>
+                      <th>Product / Service Name</th>
+                      <th style="width: 220px;">Category</th>
+                      <th style="width: 150px;" class="text-right">Selling Rate (₹)</th>
                       <th class="text-center" style="width: 80px;">Active</th>
+                      <th class="text-center" style="width: 70px;">Action</th>
                     </tr>
                   </thead>
                   <tbody id="adminRatesBody"></tbody>

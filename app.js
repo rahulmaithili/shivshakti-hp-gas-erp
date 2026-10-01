@@ -1871,43 +1871,145 @@ async function resetUserPasswordPrompt(username) {
   }
 }
 
+function openRatesManager() {
+  switchTab('screen-admin');
+  const ratesPill = document.querySelector('.filter-tab-bar button:nth-child(2)');
+  if (ratesPill) {
+    switchAdminTab('admin-tab-rates', ratesPill);
+  } else {
+    document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('admin-tab-rates')?.classList.add('active');
+  }
+  loadAdminRates();
+}
+
 async function loadAdminRates() {
   const tbody = document.getElementById('adminRatesBody');
-  tbody.innerHTML = state.meta.rates.map(r => `
-    <tr data-item="${escapeHtml(r.item)}">
-      <td><strong>${escapeHtml(r.item)}</strong></td>
-      <td><span class="badge-pill bg-purple-soft">${r.category}</span></td>
+  if (!tbody) return;
+
+  const categories = ['SALE', 'SECURITY_DEPOSIT', 'SERVICE', 'RETURN', 'SD_REFUND', 'DUES_RECEIVED'];
+  const ratesList = state.meta.rates && state.meta.rates.length ? state.meta.rates : DEFAULT_RATES;
+
+  tbody.innerHTML = ratesList.map((r, idx) => `
+    <tr>
+      <td class="text-center font-mono text-muted row-idx">${idx + 1}</td>
       <td>
-        <input type="number" class="input-modern font-mono admin-rate-input" value="${r.rate}" step="0.01" style="width: 120px; height: 36px;">
+        <input type="text" class="input-modern admin-rate-item-name" value="${escapeHtml(r.item)}" placeholder="Product / Service Name" style="height: 36px; font-weight: 700;" required>
+      </td>
+      <td>
+        <select class="input-modern admin-rate-category" style="height: 36px;">
+          ${categories.map(cat => `<option value="${cat}" ${r.category === cat ? 'selected' : ''}>${cat}</option>`).join('')}
+        </select>
+      </td>
+      <td>
+        <input type="number" class="input-modern font-mono text-right admin-rate-input" value="${r.rate}" step="0.01" min="0" style="height: 36px;" required>
       </td>
       <td class="text-center">
-        <input type="checkbox" class="admin-rate-active" checked style="width: 18px; height: 18px;">
+        <input type="checkbox" class="admin-rate-active" ${r.active !== false ? 'checked' : ''} style="width: 18px; height: 18px; cursor: pointer;">
+      </td>
+      <td class="text-center">
+        <button type="button" class="btn-row-del" onclick="deleteAdminRateRow(this)" title="Delete Product">🗑</button>
       </td>
     </tr>
   `).join('');
 }
 
+function addAdminRateRow() {
+  const tbody = document.getElementById('adminRatesBody');
+  if (!tbody) return;
+
+  const categories = ['SALE', 'SECURITY_DEPOSIT', 'SERVICE', 'RETURN', 'SD_REFUND', 'DUES_RECEIVED'];
+  const newIdx = tbody.querySelectorAll('tr').length + 1;
+  const tr = document.createElement('tr');
+
+  tr.innerHTML = `
+    <td class="text-center font-mono text-muted row-idx">${newIdx}</td>
+    <td>
+      <input type="text" class="input-modern admin-rate-item-name" value="" placeholder="e.g. 5 KG FTL Cylinder / Safety Cap" style="height: 36px; font-weight: 700;" required>
+    </td>
+    <td>
+      <select class="input-modern admin-rate-category" style="height: 36px;">
+        ${categories.map(cat => `<option value="${cat}">${cat}</option>`).join('')}
+      </select>
+    </td>
+    <td>
+      <input type="number" class="input-modern font-mono text-right admin-rate-input" value="0.00" step="0.01" min="0" style="height: 36px;" required>
+    </td>
+    <td class="text-center">
+      <input type="checkbox" class="admin-rate-active" checked style="width: 18px; height: 18px; cursor: pointer;">
+    </td>
+    <td class="text-center">
+      <button type="button" class="btn-row-del" onclick="deleteAdminRateRow(this)" title="Delete Product">🗑</button>
+    </td>
+  `;
+
+  tbody.appendChild(tr);
+  tr.querySelector('.admin-rate-item-name')?.focus();
+  showToast('New product row added. Enter name & rate then click Save.', 'info');
+}
+
+function deleteAdminRateRow(btn) {
+  const tr = btn.closest('tr');
+  if (!tr) return;
+
+  const itemName = tr.querySelector('.admin-rate-item-name')?.value.trim() || 'this item';
+  if (confirm(`Are you sure you want to delete "${itemName}"?`)) {
+    tr.remove();
+    document.querySelectorAll('#adminRatesBody tr').forEach((row, i) => {
+      const idxCell = row.querySelector('.row-idx');
+      if (idxCell) idxCell.textContent = i + 1;
+    });
+    showToast(`Removed "${itemName}". Click "Save Items & Rates" to persist changes.`, 'warning');
+  }
+}
+
 async function saveAdminRates() {
   const updatedRates = [];
-  document.querySelectorAll('#adminRatesBody tr').forEach(tr => {
-    const item = tr.dataset.item;
-    const rate = parseFloat(tr.querySelector('.admin-rate-input').value) || 0;
-    const active = tr.querySelector('.admin-rate-active').checked;
-    const orig = state.meta.rates.find(r => r.item === item);
+  const rows = document.querySelectorAll('#adminRatesBody tr');
 
-    updatedRates.push({
-      item: item,
-      category: orig ? orig.category : 'SALE',
-      rate: rate,
-      active: active
-    });
+  rows.forEach(tr => {
+    const item = (tr.querySelector('.admin-rate-item-name')?.value || '').trim();
+    const category = tr.querySelector('.admin-rate-category')?.value || 'SALE';
+    const rate = parseFloat(tr.querySelector('.admin-rate-input')?.value) || 0;
+    const active = tr.querySelector('.admin-rate-active')?.checked !== false;
+
+    if (item) {
+      updatedRates.push({ item, category, rate, active });
+    }
   });
+
+  if (updatedRates.length === 0) {
+    showToast('Cannot save empty rates list.', 'warning');
+    return;
+  }
 
   try {
     await apiCall('adminUpdateRates', { rates: updatedRates });
-    showToast('Catalog rates updated successfully!', 'success');
-    await fetchMetadata();
-  } catch (e) {}
+    showToast(`Catalog saved: ${updatedRates.length} products updated successfully!`, 'success');
+    state.meta.rates = updatedRates;
+
+    // Sync newly added/updated items to MASTER_ITEM_CATALOG
+    updatedRates.forEach(r => {
+      const existing = MASTER_ITEM_CATALOG.find(m => m.item.toLowerCase() === r.item.toLowerCase());
+      if (existing) {
+        existing.rate = r.rate;
+        existing.category = r.category;
+      } else {
+        MASTER_ITEM_CATALOG.push({
+          id: 'custom_' + Math.random().toString(36).substring(7),
+          item: r.item,
+          label: r.item,
+          category: r.category,
+          rate: r.rate
+        });
+      }
+    });
+
+    // Refresh POS Billing items dropdown
+    resetPosItemRows();
+  } catch (e) {
+    showToast('Failed to save rates catalog: ' + (e.message || e), 'error');
+  }
 }
 
 /**
