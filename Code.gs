@@ -124,7 +124,7 @@ function doPost(e) {
     // Acquire ScriptLock for state-mutating actions to prevent concurrency issues
     const isWriteAction = [
       'addEntry', 'updateEntry', 'deleteEntry', 'saveVendorLog', 'saveCashbook',
-      'saveStock', 'addDue', 'recoverDue', 'generateArchive',
+      'saveStock', 'addDue', 'recoverDue', 'generateArchive', 'issueNewConnectionPackage',
       'adminCreateUser', 'adminSetActive', 'adminResetPassword', 'adminUpdateRates',
       'adminManageVendors'
     ].includes(action);
@@ -202,6 +202,10 @@ function doPost(e) {
 
         case 'listArchives':
           response = handleListArchives();
+          break;
+
+        case 'issueNewConnectionPackage':
+          response = handleIssueNewConnectionPackage(payload.packageData, user);
           break;
 
         // Admin Management Actions
@@ -570,6 +574,95 @@ function handleAddEntry(entry, user) {
   logAudit(user.username, 'ADD_ENTRY', { ids: generatedIds, item, qty, amount, modes: paymentList.map(x => x.mode) });
 
   return successResponse({ id: generatedIds[0], count: paymentList.length, message: "Entry recorded successfully." });
+}
+
+function handleIssueNewConnectionPackage(pkgData, user) {
+  if (!pkgData || !Array.isArray(pkgData.items) || pkgData.items.length === 0) {
+    return errorResponse("Invalid package data.");
+  }
+
+  const date = sanitizeDate(pkgData.date) || getTodayDateString();
+  const time = Utilities.formatDate(new Date(), CONFIG.TIMEZONE, "HH:mm:ss");
+  const party = String(pkgData.party || '').trim();
+  const svNumber = String(pkgData.svNumber || '').trim();
+  const payments = pkgData.payments || {};
+
+  const entrySheet = getSheet(SHEETS.ENTRY);
+  if (!entrySheet) return errorResponse("ENTRY sheet does not exist.");
+
+  const totalAmount = pkgData.items.reduce((acc, it) => acc + (Number(it.amount) || 0), 0);
+
+  const cash = Number(payments.CASH) || 0;
+  const upi = Number(payments.UPI) || 0;
+  const hpPay = Number(payments.HP_PAY) || 0;
+  const dues = Number(payments.DUES) || 0;
+  const other = Number(payments.OTHER) || 0;
+  const settledTotal = Math.round((cash + upi + hpPay + dues + other) * 100) / 100;
+
+  if (Math.abs(settledTotal - totalAmount) > 0.05) {
+    return errorResponse(`Settlement total (₹${settledTotal.toFixed(2)}) must match package total (₹${totalAmount.toFixed(2)}).`);
+  }
+
+  const duesSheet = getSheet(SHEETS.DUES);
+  const createdIds = [];
+
+  let singleMode = null;
+  if (cash === totalAmount) singleMode = 'CASH';
+  else if (upi === totalAmount) singleMode = 'UPI';
+  else if (hpPay === totalAmount) singleMode = 'HP_PAY';
+  else if (dues === totalAmount) singleMode = 'DUES';
+  else if (other === totalAmount) singleMode = 'OTHER';
+
+  for (let i = 0; i < pkgData.items.length; i++) {
+    const itemObj = pkgData.items[i];
+    const itemAmount = Number(itemObj.amount) || 0;
+    const itemQty = Number(itemObj.qty) || 1;
+    const itemRate = Number(itemObj.rate) || itemAmount;
+    const itemCategory = String(itemObj.category || 'SALE').trim();
+    const itemName = String(itemObj.item || '').trim();
+    const memo = svNumber ? `SV #${svNumber} [${itemObj.label || itemName}]` : `[${itemObj.label || itemName}]`;
+
+    if (singleMode) {
+      const id = Utilities.getUuid();
+      createdIds.push(id);
+      entrySheet.appendRow([
+        id, date, time, itemCategory, itemName, itemQty, itemRate, itemAmount, singleMode, party, memo, user.username, false
+      ]);
+      if (singleMode === 'DUES' && duesSheet) {
+        duesSheet.appendRow([date, party, date, itemAmount, 'PENDING', '']);
+      }
+    } else {
+      const activeModes = [
+        { mode: 'CASH', frac: cash / totalAmount },
+        { mode: 'UPI', frac: upi / totalAmount },
+        { mode: 'HP_PAY', frac: hpPay / totalAmount },
+        { mode: 'DUES', frac: dues / totalAmount },
+        { mode: 'OTHER', frac: other / totalAmount }
+      ].filter(m => m.frac > 0);
+
+      for (let m = 0; m < activeModes.length; m++) {
+        const id = Utilities.getUuid();
+        createdIds.push(id);
+        const subAmount = Number((itemAmount * activeModes[m].frac).toFixed(2));
+        const subQty = Number((itemQty * activeModes[m].frac).toFixed(4));
+        entrySheet.appendRow([
+          id, date, time, itemCategory, itemName, subQty, itemRate, subAmount, activeModes[m].mode, party, `${memo} (${activeModes[m].mode})`, user.username, false
+        ]);
+        if (activeModes[m].mode === 'DUES' && duesSheet) {
+          duesSheet.appendRow([date, party, date, subAmount, 'PENDING', '']);
+        }
+      }
+    }
+  }
+
+  setMasterReportDate(date);
+  logAudit(user.username, 'ISSUE_NEW_CONNECTION_PACKAGE', { party, svNumber, totalAmount, count: pkgData.items.length });
+
+  return successResponse({
+    message: `New connection package issued successfully! ${pkgData.items.length} items logged to daily ledger.`,
+    count: pkgData.items.length,
+    total: totalAmount
+  });
 }
 
 function handleUpdateEntry(entry, user) {
@@ -1449,7 +1542,11 @@ function seedRatesIfEmpty() {
       ['Name change (Death)', 'SERVICE', 118, true],
       ['Truck Opening Charges', 'SERVICE', 200, true],
       ['Administration Charge', 'SERVICE', 118, true],
-      ['Safety inspection', 'SERVICE', 236, true]
+      ['Safety inspection', 'SERVICE', 236, true],
+      ['14.2KG Domestic', 'SECURITY_DEPOSIT', 2200, true],
+      ['Regulator', 'SECURITY_DEPOSIT', 250, true],
+      ['Hot Plate', 'SALE', 2350, true],
+      ['14.2KG Domestic Gas Refill', 'SALE', 903, true]
     ];
     for (const r of initialRates) {
       rSheet.appendRow(r);
@@ -1611,6 +1708,10 @@ function setupFormulas() {
     reportSales.getRange('K24').setFormula('=IF(D24=J24, "RECONCILED ✓", "DIFF: ₹" & TEXT(D24-J24, "#,##0"))');
 
     // Section 3: Security Deposits (Rows 27 to 33)
+    reportSales.getRange('E27').setValue(2200);
+    reportSales.getRange('E28').setValue(250);
+    reportSales.getRange('E29').setValue(2400);
+
     for (const r of [27, 28, 29, 30, 31, 32]) {
       reportSales.getRange(`D${r}`).setFormula(`=SUMIFS(ENTRY!F:F, ENTRY!B:B, '${vendorSheetName}'!$H$2, ENTRY!E:E, A${r}, ENTRY!D:D, "SECURITY_DEPOSIT", ENTRY!M:M, "<>TRUE")`);
       reportSales.getRange(`F${r}`).setFormula(`=IF(OR(D${r}<>"",E${r}<>""), D${r}*E${r}, "")`);

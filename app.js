@@ -467,6 +467,15 @@ function selectQuickCategory(category, btn) {
 }
 
 function onCategoryChanged() {
+  const category = document.getElementById('entryCategory')?.value;
+  const ncBanner = document.getElementById('ncQuickBanner');
+  if (ncBanner) {
+    if (category === 'SECURITY_DEPOSIT') {
+      ncBanner.classList.remove('hidden');
+    } else {
+      ncBanner.classList.add('hidden');
+    }
+  }
   populateEntryItems();
 }
 
@@ -747,6 +756,219 @@ async function deleteEntryClick(id) {
       loadTodayEntries();
       loadDashboardData();
     } catch (e) {}
+  }
+}
+
+/**
+ * ============================================================================
+ * 3.1. NEW CONNECTION 14.2KG PACKAGE (SV BUNDLE)
+ * ============================================================================
+ */
+const NC_BUNDLE_CONFIG = [
+  { id: 'cyl', item: '14.2KG Domestic', label: 'Cylinder security (14.2 Kg)', category: 'SECURITY_DEPOSIT', rate: 2200 },
+  { id: 'reg', item: 'Regulator', label: 'Regulator (A-065767)', category: 'SECURITY_DEPOSIT', rate: 250 },
+  { id: 'adm', item: 'Administration Charge', label: 'Administration Charge', category: 'SERVICE', rate: 118 },
+  { id: 'pipe', item: 'Suraksha Hose Pipe', label: 'Suraksha Hose Pipe', category: 'SALE', rate: 190 },
+  { id: 'dgc', item: 'Domestic Pass Book', label: 'D.G.C. (Domestic Pass Book)', category: 'SALE', rate: 59 },
+  { id: 'stove', item: 'Hot Plate', label: 'Hot Plate (Gas Stove)', category: 'SALE', rate: 2350 },
+  { id: 'gas', item: '14.2KG Domestic Gas Refill', label: 'Gas (14.2KG Refill Gas)', category: 'SALE', rate: 903 }
+];
+
+function openNewConnectionModal() {
+  const partyInput = document.getElementById('entryParty');
+  const ncParty = document.getElementById('ncCustomerName');
+  if (partyInput && ncParty && partyInput.value.trim()) {
+    ncParty.value = partyInput.value.trim();
+  }
+
+  // Ensure all 7 items are checked by default
+  NC_BUNDLE_CONFIG.forEach(cfg => {
+    const cb = document.getElementById(`ncItem_${cfg.id}`);
+    if (cb) cb.checked = true;
+  });
+
+  calculatePackageTotal();
+  applyNcPresetSettlement('CASH');
+  openModal('modalNewConnectionPackage');
+}
+
+function calculatePackageTotal() {
+  let total = 0;
+  NC_BUNDLE_CONFIG.forEach(cfg => {
+    const cb = document.getElementById(`ncItem_${cfg.id}`);
+    const isChecked = cb ? cb.checked : true;
+    if (isChecked) {
+      total += cfg.rate;
+    }
+  });
+
+  const dispEl = document.getElementById('ncPackageTotalDisplay');
+  const reqEl = document.getElementById('ncTotalRequired');
+  if (dispEl) dispEl.textContent = formatINR(total);
+  if (reqEl) reqEl.textContent = formatINR(total);
+
+  onNcSettlementChanged();
+}
+
+function applyNcPresetSettlement(mode) {
+  let total = 0;
+  NC_BUNDLE_CONFIG.forEach(cfg => {
+    const cb = document.getElementById(`ncItem_${cfg.id}`);
+    if (cb && cb.checked) total += cfg.rate;
+  });
+
+  const cashEl = document.getElementById('ncSettleCash');
+  const upiEl = document.getElementById('ncSettleUpi');
+  const hpEl = document.getElementById('ncSettleHpPay');
+  const duesEl = document.getElementById('ncSettleDues');
+  const otherEl = document.getElementById('ncSettleOther');
+
+  if (cashEl) cashEl.value = mode === 'CASH' ? total.toFixed(2) : '0';
+  if (upiEl) upiEl.value = mode === 'UPI' ? total.toFixed(2) : '0';
+  if (hpEl) hpEl.value = mode === 'HP_PAY' ? total.toFixed(2) : '0';
+  if (duesEl) duesEl.value = mode === 'DUES' ? total.toFixed(2) : '0';
+  if (otherEl) otherEl.value = mode === 'OTHER' ? total.toFixed(2) : '0';
+
+  onNcSettlementChanged();
+}
+
+function onNcSettlementChanged() {
+  let packageTotal = 0;
+  NC_BUNDLE_CONFIG.forEach(cfg => {
+    const cb = document.getElementById(`ncItem_${cfg.id}`);
+    if (cb && cb.checked) packageTotal += cfg.rate;
+  });
+
+  const cash = parseFloat(document.getElementById('ncSettleCash')?.value) || 0;
+  const upi = parseFloat(document.getElementById('ncSettleUpi')?.value) || 0;
+  const hpPay = parseFloat(document.getElementById('ncSettleHpPay')?.value) || 0;
+  const dues = parseFloat(document.getElementById('ncSettleDues')?.value) || 0;
+  const other = parseFloat(document.getElementById('ncSettleOther')?.value) || 0;
+
+  const totalSettled = Math.round((cash + upi + hpPay + dues + other) * 100) / 100;
+
+  const reqEl = document.getElementById('ncTotalRequired');
+  const givenEl = document.getElementById('ncTotalGiven');
+  const badgeEl = document.getElementById('ncStatusBadge');
+  const textEl = document.getElementById('ncStatusText');
+  const iconEl = badgeEl?.querySelector('.status-indicator');
+
+  if (reqEl) reqEl.textContent = formatINR(packageTotal);
+  if (givenEl) givenEl.textContent = formatINR(totalSettled);
+
+  const diff = Math.round((packageTotal - totalSettled) * 100) / 100;
+  const isBalanced = Math.abs(diff) < 0.01;
+
+  if (badgeEl && textEl) {
+    if (isBalanced) {
+      badgeEl.className = 'pos-settle-badge balanced';
+      if (iconEl) iconEl.textContent = '✓';
+      textEl.textContent = 'Balanced & Reconciled';
+    } else {
+      badgeEl.className = 'pos-settle-badge mismatch';
+      if (iconEl) iconEl.textContent = '⚠️';
+      if (diff > 0) {
+        textEl.textContent = `Short: ₹${diff.toFixed(2)} needed`;
+      } else {
+        textEl.textContent = `Excess: ₹${Math.abs(diff).toFixed(2)} over`;
+      }
+    }
+  }
+
+  return {
+    isBalanced,
+    packageTotal,
+    totalSettled,
+    diff,
+    payments: {
+      CASH: cash,
+      UPI: upi,
+      HP_PAY: hpPay,
+      DUES: dues,
+      OTHER: other
+    }
+  };
+}
+
+async function handleNewConnectionSubmit(e) {
+  if (e) e.preventDefault();
+
+  const party = (document.getElementById('ncCustomerName')?.value || '').trim();
+  const svNumber = (document.getElementById('ncSvNumber')?.value || '').trim();
+
+  if (!party) {
+    showToast('Please enter Consumer / Customer Name.', 'warning');
+    document.getElementById('ncCustomerName')?.focus();
+    return;
+  }
+
+  const activeItems = [];
+  NC_BUNDLE_CONFIG.forEach(cfg => {
+    const cb = document.getElementById(`ncItem_${cfg.id}`);
+    if (cb && cb.checked) {
+      activeItems.push({
+        id: cfg.id,
+        item: cfg.item,
+        label: cfg.label,
+        category: cfg.category,
+        rate: cfg.rate,
+        qty: 1,
+        amount: cfg.rate
+      });
+    }
+  });
+
+  if (activeItems.length === 0) {
+    showToast('Please select at least one item in the connection package.', 'warning');
+    return;
+  }
+
+  const settlement = onNcSettlementChanged();
+  if (!settlement.isBalanced) {
+    if (settlement.diff > 0) {
+      showToast(`Settlement mismatch: Please allocate ₹${settlement.diff.toFixed(2)} across payment modes.`, 'error');
+    } else {
+      showToast(`Settlement mismatch: Over-allocated by ₹${Math.abs(settlement.diff).toFixed(2)}.`, 'error');
+    }
+    return;
+  }
+
+  const submitBtn = document.getElementById('btnIssuePackageSubmit');
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span>Saving 7 Items to Ledger...</span>';
+  }
+
+  try {
+    const packagePayload = {
+      date: state.currentDate,
+      party: party,
+      svNumber: svNumber,
+      items: activeItems,
+      payments: settlement.payments
+    };
+
+    await apiCall('issueNewConnectionPackage', { packageData: packagePayload });
+    showToast(`New Connection Package (${activeItems.length} items, ₹${settlement.packageTotal.toFixed(2)}) issued successfully!`, 'success');
+    closeModal('modalNewConnectionPackage');
+
+    // Reset customer name in modal
+    const custInput = document.getElementById('ncCustomerName');
+    if (custInput) custInput.value = '';
+    const svInput = document.getElementById('ncSvNumber');
+    if (svInput) svInput.value = '';
+
+    // Refresh all views & dashboard
+    await loadTodayEntries();
+    await loadDashboardData();
+  } catch (err) {
+    console.error('Error issuing new connection package:', err);
+    showToast(err.message || 'Failed to issue new connection package.', 'error');
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<span>Issue Connection & Save 7 Items</span>';
+    }
   }
 }
 

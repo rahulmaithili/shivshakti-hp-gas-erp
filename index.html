@@ -377,6 +377,10 @@
                 <h3 class="card-title">POS Invoicing & Billing Counter</h3>
                 <p class="card-subtitle">Fast keyboard-driven billing for Cylinders, Accessories, Services & Dues</p>
               </div>
+              <button type="button" class="btn-new-connection-badge" onclick="openNewConnectionModal()">
+                <span>✨</span>
+                <span>14.2KG New Connection Package (SV)</span>
+              </button>
             </div>
 
             <form id="entryForm" onsubmit="handleEntrySubmit(event)" class="billing-form-wrapper">
@@ -388,6 +392,17 @@
                 <button type="button" class="cat-pill" data-cat="SD_REFUND" onclick="selectQuickCategory('SD_REFUND', this)">Deposit Refund</button>
                 <button type="button" class="cat-pill" data-cat="SERVICE" onclick="selectQuickCategory('SERVICE', this)">Services & Charges</button>
                 <button type="button" class="cat-pill" data-cat="DUES_RECEIVED" onclick="selectQuickCategory('DUES_RECEIVED', this)">Dues Recovered</button>
+              </div>
+
+              <!-- Quick SV Package Banner (shows when Security Deposit category is active) -->
+              <div id="ncQuickBanner" class="package-prompt-strip hidden">
+                <div class="package-prompt-content">
+                  <strong>📦 14.2KG Domestic SV New Connection?</strong>
+                  <span>Auto-bundles 7 items: Cylinder Security, Regulator, Admin Fee, Pipe, Passbook, Stove & Gas.</span>
+                </div>
+                <button type="button" class="btn-erp-primary btn-sm" onclick="openNewConnectionModal()">
+                  <span>Issue 7-Item Package</span>
+                </button>
               </div>
 
               <!-- Hidden select synced with pills -->
@@ -1086,6 +1101,190 @@
         <div class="modal-foot">
           <button type="button" class="btn-erp-outline" onclick="closeModal('modalCreateUser')">Cancel</button>
           <button type="submit" class="btn-erp-primary">Create User</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- New Connection 14.2KG Package Modal -->
+  <div id="modalNewConnectionPackage" class="modal-overlay hidden">
+    <div class="modal-box modal-lg">
+      <div class="modal-head">
+        <div>
+          <h3>✨ 14.2KG New Connection Package (SV)</h3>
+          <p class="modal-subtitle">Auto-generate 7 bundled items across Security Deposit, Service & Accessories</p>
+        </div>
+        <button class="modal-close-btn" onclick="closeModal('modalNewConnectionPackage')">&times;</button>
+      </div>
+      <form id="newConnectionPackageForm" onsubmit="handleNewConnectionSubmit(event)">
+        <!-- Consumer Details -->
+        <div class="billing-inputs-grid mb-3">
+          <div class="input-field-group col-3">
+            <label for="ncCustomerName">Consumer / Customer Name <span class="text-danger">*</span></label>
+            <input type="text" id="ncCustomerName" class="input-modern" placeholder="e.g. Ramesh Kumar / Smt. Sunita Devi" required>
+          </div>
+          <div class="input-field-group col-3">
+            <label for="ncSvNumber">SV / Subscription Voucher No.</label>
+            <input type="text" id="ncSvNumber" class="input-modern" placeholder="e.g. SV-2026-081 / Consumer #20419">
+          </div>
+        </div>
+
+        <!-- Bundle Items Table -->
+        <div class="table-responsive-box mb-3">
+          <table class="package-bundle-table">
+            <thead>
+              <tr>
+                <th style="width: 45px;" class="text-center">Active</th>
+                <th>Bundle Component</th>
+                <th>Report Section</th>
+                <th class="text-right">Rate (₹)</th>
+                <th class="text-center">Qty</th>
+                <th class="text-right">Amount (₹)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- 1. Cylinder Security -->
+              <tr>
+                <td class="text-center">
+                  <input type="checkbox" id="ncItem_cyl" checked onchange="calculatePackageTotal()">
+                </td>
+                <td><strong>Cylinder security (14.2 Kg)</strong></td>
+                <td><span class="badge-pill bg-purple-soft">Security Deposit</span></td>
+                <td class="text-right font-mono">₹2,200.00</td>
+                <td class="text-center font-mono">1</td>
+                <td class="text-right font-mono font-bold" id="ncAmount_cyl">₹2,200.00</td>
+              </tr>
+              <!-- 2. Regulator Security -->
+              <tr>
+                <td class="text-center">
+                  <input type="checkbox" id="ncItem_reg" checked onchange="calculatePackageTotal()">
+                </td>
+                <td><strong>Regulator (A-065767)</strong></td>
+                <td><span class="badge-pill bg-purple-soft">Security Deposit</span></td>
+                <td class="text-right font-mono">₹250.00</td>
+                <td class="text-center font-mono">1</td>
+                <td class="text-right font-mono font-bold" id="ncAmount_reg">₹250.00</td>
+              </tr>
+              <!-- 3. Administration Charge -->
+              <tr>
+                <td class="text-center">
+                  <input type="checkbox" id="ncItem_adm" checked onchange="calculatePackageTotal()">
+                </td>
+                <td><strong>Administration Charge</strong></td>
+                <td><span class="badge-pill bg-blue-soft">Service Charges</span></td>
+                <td class="text-right font-mono">₹118.00</td>
+                <td class="text-center font-mono">1</td>
+                <td class="text-right font-mono font-bold" id="ncAmount_adm">₹118.00</td>
+              </tr>
+              <!-- 4. Suraksha Hose Pipe -->
+              <tr>
+                <td class="text-center">
+                  <input type="checkbox" id="ncItem_pipe" checked onchange="calculatePackageTotal()">
+                </td>
+                <td><strong>Suraksha Hose Pipe</strong></td>
+                <td><span class="badge-pill bg-emerald-soft">Accessories Sale</span></td>
+                <td class="text-right font-mono">₹190.00</td>
+                <td class="text-center font-mono">1</td>
+                <td class="text-right font-mono font-bold" id="ncAmount_pipe">₹190.00</td>
+              </tr>
+              <!-- 5. D.G.C. Passbook -->
+              <tr>
+                <td class="text-center">
+                  <input type="checkbox" id="ncItem_dgc" checked onchange="calculatePackageTotal()">
+                </td>
+                <td><strong>D.G.C. (Domestic Pass Book)</strong></td>
+                <td><span class="badge-pill bg-emerald-soft">Accessories Sale</span></td>
+                <td class="text-right font-mono">₹59.00</td>
+                <td class="text-center font-mono">1</td>
+                <td class="text-right font-mono font-bold" id="ncAmount_dgc">₹59.00</td>
+              </tr>
+              <!-- 6. Hot Plate -->
+              <tr>
+                <td class="text-center">
+                  <input type="checkbox" id="ncItem_stove" checked onchange="calculatePackageTotal()">
+                </td>
+                <td><strong>Hot Plate (Gas Stove)</strong> <small class="text-muted">(Optional)</small></td>
+                <td><span class="badge-pill bg-emerald-soft">Appliance Sale</span></td>
+                <td class="text-right font-mono">₹2,350.00</td>
+                <td class="text-center font-mono">1</td>
+                <td class="text-right font-mono font-bold" id="ncAmount_stove">₹2,350.00</td>
+              </tr>
+              <!-- 7. Gas Refill -->
+              <tr>
+                <td class="text-center">
+                  <input type="checkbox" id="ncItem_gas" checked onchange="calculatePackageTotal()">
+                </td>
+                <td><strong>Gas (14.2KG Refill Gas)</strong> <small class="text-muted">(Optional)</small></td>
+                <td><span class="badge-pill bg-emerald-soft">Cylinder Refill</span></td>
+                <td class="text-right font-mono">₹903.00</td>
+                <td class="text-center font-mono">1</td>
+                <td class="text-right font-mono font-bold" id="ncAmount_gas">₹903.00</td>
+              </tr>
+            </tbody>
+            <tfoot>
+              <tr class="package-total-row">
+                <td colspan="5" class="text-right font-bold">TOTAL PACKAGE AMOUNT:</td>
+                <td class="text-right font-mono font-bold text-primary" id="ncPackageTotalDisplay">₹6,070.00</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+
+        <!-- POS Settlement For Package -->
+        <div class="pos-settlement-card">
+          <div class="pos-settlement-top">
+            <div class="pos-settlement-title-box">
+              <h4 class="pos-settlement-title">Package Payment Settlement (₹)</h4>
+              <span class="pos-settlement-subtitle">Allocate total package fee across Cash, UPI, HP Pay, or Dues</span>
+            </div>
+            <div class="pos-settle-presets">
+              <button type="button" class="btn-preset-chip" onclick="applyNcPresetSettlement('CASH')">💵 100% Cash</button>
+              <button type="button" class="btn-preset-chip" onclick="applyNcPresetSettlement('UPI')">📱 100% UPI</button>
+              <button type="button" class="btn-preset-chip" onclick="applyNcPresetSettlement('HP_PAY')">💳 100% HP Pay</button>
+              <button type="button" class="btn-preset-chip" onclick="applyNcPresetSettlement('DUES')">📝 100% Dues</button>
+            </div>
+          </div>
+
+          <div class="pos-settlement-grid">
+            <div class="pos-mode-box mode-cash">
+              <label for="ncSettleCash"><span class="mode-dot dot-cash"></span>Cash (₹)</label>
+              <input type="number" id="ncSettleCash" class="input-modern font-mono" min="0" step="0.01" value="6070" oninput="onNcSettlementChanged()">
+            </div>
+            <div class="pos-mode-box mode-upi">
+              <label for="ncSettleUpi"><span class="mode-dot dot-upi"></span>UPI (₹)</label>
+              <input type="number" id="ncSettleUpi" class="input-modern font-mono" min="0" step="0.01" value="0" oninput="onNcSettlementChanged()">
+            </div>
+            <div class="pos-mode-box mode-hppay">
+              <label for="ncSettleHpPay"><span class="mode-dot dot-hppay"></span>HP Pay (₹)</label>
+              <input type="number" id="ncSettleHpPay" class="input-modern font-mono" min="0" step="0.01" value="0" oninput="onNcSettlementChanged()">
+            </div>
+            <div class="pos-mode-box mode-dues">
+              <label for="ncSettleDues"><span class="mode-dot dot-dues"></span>Dues (₹)</label>
+              <input type="number" id="ncSettleDues" class="input-modern font-mono" min="0" step="0.01" value="0" oninput="onNcSettlementChanged()">
+            </div>
+            <div class="pos-mode-box mode-other">
+              <label for="ncSettleOther"><span class="mode-dot dot-other"></span>Others (₹)</label>
+              <input type="number" id="ncSettleOther" class="input-modern font-mono" min="0" step="0.01" value="0" oninput="onNcSettlementChanged()">
+            </div>
+          </div>
+
+          <div class="pos-settlement-bar">
+            <div class="pos-settle-totals">
+              <span class="total-tag">Package Fee: <strong id="ncTotalRequired">₹6,070.00</strong></span>
+              <span class="total-tag">Settled: <strong id="ncTotalGiven">₹6,070.00</strong></span>
+            </div>
+            <div class="pos-settle-badge balanced" id="ncStatusBadge">
+              <span class="status-indicator">✓</span>
+              <span id="ncStatusText">Balanced & Reconciled</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-foot">
+          <button type="button" class="btn-erp-outline" onclick="closeModal('modalNewConnectionPackage')">Cancel</button>
+          <button type="submit" id="btnIssuePackageSubmit" class="btn-erp-primary">
+            <span>Issue Connection & Save 7 Items</span>
+          </button>
         </div>
       </form>
     </div>
