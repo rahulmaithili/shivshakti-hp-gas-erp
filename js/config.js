@@ -12,7 +12,7 @@ export const CONFIG = {
   
   // API Endpoints: Primary Netlify Function Proxy & Direct GAS Fallback
   API_PROXY_URL: '/api',
-  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbxnNUYfRxB_gMNx3Y-2OX5GEBvj2gRJuT1MomxlZZ8U-jWLkH_0e_VZ3NcyZtG8lhIieg/exec',
+  APPS_SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbz7H4EIGnGX_Jm4rtbpQ0l19LaeHpgBDa7P7jA_UEF1TYFpQs25pX_xw7HJdxWES_5zWw/exec',
 
   // Network & Timeout (30 seconds default)
   DEFAULT_TIMEOUT: 30000,

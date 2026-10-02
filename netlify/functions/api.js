@@ -25,7 +25,7 @@ exports.handler = async function (event, context) {
   const scriptUrl =
     process.env.APPS_SCRIPT_URL ||
     process.env.GAS_WEBAPP_URL ||
-    'https://script.google.com/macros/s/AKfycbxnNUYfRxB_gMNx3Y-2OX5GEBvj2gRJuT1MomxlZZ8U-jWLkH_0e_VZ3NcyZtG8lhIieg/exec';
+    'https://script.google.com/macros/s/AKfycbz7H4EIGnGX_Jm4rtbpQ0l19LaeHpgBDa7P7jA_UEF1TYFpQs25pX_xw7HJdxWES_5zWw/exec';
 
   try {
     let payload = event.body || '{}';
