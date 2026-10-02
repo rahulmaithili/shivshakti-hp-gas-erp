@@ -1,6 +1,7 @@
 /**
- * Netlify Serverless Proxy Function for Google Apps Script Web App
- * Hides the Google Apps Script deployment URL and resolves CORS seamlessly.
+ * Netlify Serverless Edge Proxy for Shiv Shakti HP Gas ERP
+ * Forwards requests to Google Apps Script Web App, avoids CORS issues,
+ * follows Google 302 redirects, and provides standard error handling.
  */
 
 exports.handler = async function (event, context) {
@@ -12,12 +13,12 @@ exports.handler = async function (event, context) {
     'Content-Type': 'application/json'
   };
 
-  // Handle preflight OPTIONS request
+  // Preflight
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
       headers: headers,
-      body: JSON.stringify({ ok: true })
+      body: JSON.stringify({ ok: true, data: { status: 'preflight_ok' }, message: '' })
     };
   }
 
@@ -29,7 +30,7 @@ exports.handler = async function (event, context) {
   try {
     let payload = event.body || '{}';
 
-    // Google Apps Script requires text/plain POST to avoid preflight issues & follow 302 redirects
+    // Google Apps Script requires text/plain POST to avoid preflight issues & follow redirects
     const response = await fetch(scriptUrl, {
       method: 'POST',
       headers: {
@@ -44,7 +45,13 @@ exports.handler = async function (event, context) {
     try {
       responseData = JSON.parse(responseText);
     } catch (e) {
-      responseData = { ok: false, error: 'Invalid response from Apps Script: ' + responseText };
+      responseData = {
+        ok: false,
+        error: {
+          code: 'SERVER',
+          message: 'Invalid response format from Apps Script: ' + responseText.substring(0, 300)
+        }
+      };
     }
 
     return {
@@ -58,7 +65,10 @@ exports.handler = async function (event, context) {
       headers: headers,
       body: JSON.stringify({
         ok: false,
-        error: 'Netlify proxy connection error: ' + err.message
+        error: {
+          code: 'NETWORK',
+          message: 'Netlify proxy connection error: ' + err.message
+        }
       })
     };
   }

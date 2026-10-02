@@ -1,0 +1,133 @@
+/**
+ * ============================================================================
+ * SHIV SHAKTI HP GAS ERP - THEME TOKENS & PALETTES
+ * Enterprise SaaS System Variables, Dark/Light Themes, Rounded Scale
+ * ============================================================================
+ */
+
+:root {
+  /* Corporate Navy Default Palette */
+  --navy-primary: #001f3f;
+  --navy-dark: #001529;
+  --navy-light: #003366;
+  --navy-accent: #0074D9;
+  --navy-hover: #002a52;
+  --c-secondary: #003366;
+  --c-on-accent: #ffffff;
+
+  /* Curved Design Scale */
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 18px;
+  --r-pill: 999px;
+
+  /* Light / Day Theme Defaults */
+  --bg-app: #f4f6f9;
+  --bg-sidebar: #001529;
+  --bg-sidebar-hover: rgba(255, 255, 255, 0.08);
+  --bg-sidebar-active: #0074D9;
+  --bg-card: #ffffff;
+  --bg-card-inner: #f8fafc;
+  --bg-topbar: rgba(255, 255, 255, 0.94);
+  --bg-input: #ffffff;
+  --border-color: #e2e8f0;
+  --border-subtle: #f1f5f9;
+  --border-focus: #0074D9;
+
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+  --text-sidebar: #94a3b8;
+  --text-sidebar-active: #ffffff;
+
+  /* Functional Accents */
+  --c-blue: #0074D9;
+  --c-blue-soft: #eff6ff;
+  --c-green: #059669;
+  --c-green-soft: #ecfdf5;
+  --c-purple: #7c3aed;
+  --c-purple-soft: #f5f3ff;
+  --c-amber: #d97706;
+  --c-amber-soft: #fffbeb;
+  --c-teal: #0d9488;
+  --c-teal-soft: #f0fdfa;
+  --c-rose: #e11d48;
+  --c-rose-soft: #fff1f2;
+  --c-orange: #ea580c;
+  --c-orange-soft: #fff7ed;
+
+  --primary: var(--navy-accent);
+  --primary-hover: var(--navy-hover);
+  --primary-gradient: linear-gradient(135deg, var(--navy-primary) 0%, var(--navy-accent) 100%);
+  --secondary: #475569;
+  --secondary-gradient: linear-gradient(135deg, #334155 0%, #64748b 100%);
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.07), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+
+  --radius-sm: var(--r-sm);
+  --radius-md: var(--r-md);
+  --radius-lg: var(--r-lg);
+  --radius-full: var(--r-pill);
+
+  --sidebar-width: 255px;
+  --sidebar-collapsed-width: 72px;
+  --topbar-height: 64px;
+  --mobile-nav-height: 62px;
+  --transition-speed: 0.22s;
+}
+
+/* Dark / Night Mode Overrides */
+[data-theme="dark"] {
+  --bg-app: #0b0f19;
+  --bg-sidebar: #0b1120;
+  --bg-sidebar-hover: rgba(255, 255, 255, 0.06);
+  --bg-sidebar-active: #3b82f6;
+  --bg-card: #111827;
+  --bg-card-inner: #192237;
+  --bg-topbar: rgba(17, 24, 39, 0.9);
+  --bg-input: #1a243a;
+  --border-color: #243048;
+  --border-subtle: #1e293b;
+  --border-focus: #60a5fa;
+
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --text-sidebar: #94a3b8;
+  --text-sidebar-active: #ffffff;
+
+  --c-blue-soft: rgba(0, 116, 217, 0.15);
+  --c-green-soft: rgba(16, 185, 129, 0.15);
+  --c-purple-soft: rgba(124, 58, 237, 0.15);
+  --c-amber-soft: rgba(217, 119, 6, 0.15);
+  --c-teal-soft: rgba(13, 148, 136, 0.15);
+  --c-rose-soft: rgba(225, 29, 72, 0.15);
+  --c-orange-soft: rgba(234, 88, 12, 0.15);
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 10px 20px -3px rgba(0, 0, 0, 0.6);
+}
+
+/* Base Typography & Resets */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  min-height: 100vh;
+  line-height: 1.5;
+  transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', monospace !important;
+  font-variant-numeric: tabular-nums;
+}

@@ -1,0 +1,150 @@
+/**
+ * ============================================================================
+ * SHIV SHAKTI HP GAS ERP - CENTRALIZED PRINT ENGINE STYLES
+ * Support: A4 (Landscape & Portrait), A5, 80mm Thermal Receipt, Payslips
+ * ============================================================================
+ */
+
+@media screen {
+  .print-only { display: none !important; }
+}
+
+@media print {
+  /* Hide all non-printable UI elements */
+  .app-sidebar,
+  .app-topbar,
+  .bottom-nav-mobile,
+  .sidebar-backdrop,
+  .top-loadbar,
+  .action-loader,
+  .btn-audit-refresh,
+  .topbar-btn-icon,
+  .btn-erp-primary,
+  .btn-erp-outline,
+  .btn-erp-secondary,
+  .btn-erp-danger,
+  .btn-erp-success,
+  .search-results-dropdown,
+  .modal-overlay:not(.print-active-modal),
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 11pt;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .app-main-canvas {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .main-content {
+    max-width: 100% !important;
+    padding: 0 !important;
+  }
+
+  /* Force background colors on print */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Document Print Containers */
+  .print-document-wrap {
+    display: block !important;
+    width: 100%;
+    margin: 0 auto;
+    padding: 10mm;
+    page-break-after: always;
+  }
+
+  /* Standard A4 Layout */
+  @page {
+    size: A4 portrait;
+    margin: 10mm;
+  }
+
+  /* 80mm Thermal Receipt Layout */
+  body.print-mode-thermal {
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 9pt !important;
+  }
+  body.print-mode-thermal @page {
+    size: 80mm auto;
+    margin: 2mm;
+  }
+  body.print-mode-thermal .print-document-wrap {
+    width: 76mm !important;
+    padding: 2mm !important;
+  }
+
+  /* Printable Table Formatting */
+  .print-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+    font-size: 9pt;
+  }
+  .print-table th,
+  .print-table td {
+    border: 1px solid #333333;
+    padding: 4px 6px;
+    vertical-align: middle;
+  }
+  .print-table th {
+    background-color: #f1f5f9 !important;
+    font-weight: 800;
+  }
+
+  /* Header & Logo */
+  .print-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 2px solid #000000;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+  }
+  .print-header-logo {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+  }
+  .print-header-info {
+    text-align: center;
+    flex: 1;
+  }
+  .print-agency-name {
+    font-size: 16pt;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+    margin-bottom: 2px;
+  }
+  .print-agency-details {
+    font-size: 8.5pt;
+    color: #333333;
+    line-height: 1.3;
+  }
+
+  .print-meta-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    font-size: 9pt;
+    margin-bottom: 12px;
+  }
+
+  .print-footer-signatures {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 30px;
+    padding-top: 10px;
+    border-top: 1px dashed #666666;
+    font-size: 9pt;
+  }
+}
