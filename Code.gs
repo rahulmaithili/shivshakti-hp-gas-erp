@@ -242,7 +242,7 @@ function setupDatabase() {
       'Madhubani',
       'Bihar',
       '847234',
-      '+91 94312 00000',
+      '9431200000',
       'shivshaktihpgas@gmail.com',
       '10AAACR1234F1Z5',
       'AAACR1234F',
