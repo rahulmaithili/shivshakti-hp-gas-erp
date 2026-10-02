@@ -4,19 +4,54 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Shiv Shakti HP Gas ERP - Daily Rojnamcha & Billing</title>
+
+  <!-- Early Theme Palette Loader (No Flash) -->
+  <script>
+    (function () {
+      var root = document.documentElement;
+      var savedTheme = localStorage.getItem('ss_theme') || 'light';
+      root.setAttribute('data-theme', savedTheme);
+      try {
+        var vars = JSON.parse(localStorage.getItem('app_theme_vars') || '{}');
+        Object.keys(vars).forEach(function (k) {
+          if (k.indexOf('--') === 0) root.style.setProperty(k, vars[k]);
+        });
+      } catch (e) {}
+    })();
+  </script>
+
+  <!-- CDNs: FontAwesome 6.5.1, SweetAlert2 v11, Chart.js v4.4.0 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
   <link rel="stylesheet" href="style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 </head>
 <body class="user-logged-out">
-  <!-- Toast Notification -->
+  <!-- Ultra-thin Top Loading Bar -->
+  <div id="topLoadBar" class="top-loadbar"></div>
+
+  <!-- Branded Action Processing Overlay -->
+  <div id="actionLoader" class="action-loader hidden">
+    <div class="action-loader-card">
+      <div class="loader-emblem">HP</div>
+      <div class="loader-spinner-ring"></div>
+      <div class="action-loader-title" id="actionLoaderText">Processing Transaction...</div>
+      <div class="action-loader-sub">Shiv Shakti Enterprise ERP Cloud Sync</div>
+      <div class="action-loader-bar-wrap"><div class="action-loader-bar"></div></div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Fallback -->
   <div id="toastNotification" class="toast hidden" role="alert">
     <div id="toastIcon" class="toast-icon"></div>
     <div id="toastMessage" class="toast-message"></div>
     <button class="toast-close" onclick="hideToast()" aria-label="Close notification">&times;</button>
   </div>
 
-  <!-- Loading Spinner Overlay -->
+  <!-- Loading Spinner Overlay Fallback -->
   <div id="loadingOverlay" class="loading-overlay hidden">
     <div class="spinner-pulse">
       <div class="spinner-core"></div>
@@ -172,11 +207,26 @@
         </div>
 
         <div class="topbar-right">
+          <!-- Global 360 Search Box -->
+          <div class="topbar-search-wrap">
+            <div class="topbar-search-inner">
+              <i class="fa-solid fa-magnifying-glass search-icon"></i>
+              <input type="text" id="globalSearchInput" class="topbar-search-input" placeholder="Search bills, hawkers, dues..." oninput="handleGlobalSearch(this.value)" onfocus="handleGlobalSearch(this.value)">
+              <button type="button" class="search-clear-btn hidden" id="globalSearchClear" onclick="clearGlobalSearch()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div id="globalSearchResults" class="search-results-dropdown hidden"></div>
+          </div>
+
           <!-- Live Date Picker Pill -->
           <div class="header-date-pill">
             <svg viewBox="0 0 24 24" class="svg-icon date-icon"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
             <input type="date" id="globalDatePicker" onchange="onDateChanged()" aria-label="Selected Date">
           </div>
+
+          <!-- Theme Palette Selector -->
+          <button class="topbar-btn-icon" onclick="openThemePaletteModal()" title="Theme Colors & Palette">
+            <i class="fa-solid fa-palette"></i>
+          </button>
 
           <!-- Day / Dark Mode Quick Switch -->
           <button class="topbar-btn-icon" onclick="toggleTheme()" id="topbarThemeBtn" title="Switch Theme">
@@ -264,66 +314,123 @@
             </button>
           </div>
 
-          <!-- MULTI-COLOR METRIC KPI CARDS -->
-          <div class="metrics-grid">
-            <!-- Metric 1: Total Gross Billing (Blue) -->
-            <div class="metric-card metric-blue">
-              <div class="metric-header">
-                <span class="metric-title">TOTAL GROSS BILLING</span>
-                <div class="metric-icon-bubble">₹</div>
+          <!-- ADMINLTE ENTERPRISE SMALL-BOX KPI METRICS -->
+          <div class="small-box-grid">
+            <!-- Metric 1: Total Gross Billing (Navy) -->
+            <div class="small-box bg-navy">
+              <div class="inner">
+                <h3 class="font-mono" id="kpiTotalBilling">₹0.00</h3>
+                <p>TOTAL GROSS BILLING</p>
+                <span class="small-box-desc">Refills, Cylinders & Daily Services</span>
               </div>
-              <div class="metric-value font-mono" id="kpiTotalBilling">₹0.00</div>
-              <div class="metric-footer">Daily Invoiced Gross Billing + Dues</div>
+              <div class="icon">
+                <i class="fa-solid fa-receipt"></i>
+              </div>
+              <a href="javascript:void(0)" onclick="switchTab('screen-entry')" class="small-box-footer">
+                POS Billing Counter <i class="fa-solid fa-arrow-circle-right"></i>
+              </a>
             </div>
 
-            <!-- Metric 2: Net Cash Inflow (Green) -->
-            <div class="metric-card metric-green">
-              <div class="metric-header">
-                <span class="metric-title">NET CASH INFLOW</span>
-                <div class="metric-icon-bubble">💵</div>
+            <!-- Metric 2: Net Cash Inflow (Success Green) -->
+            <div class="small-box bg-success">
+              <div class="inner">
+                <h3 class="font-mono" id="kpiNetCash">₹0.00</h3>
+                <p>NET CASH INFLOW</p>
+                <span class="small-box-desc">Counter & Delivery Cash Collected</span>
               </div>
-              <div class="metric-value font-mono text-emerald" id="kpiNetCash">₹0.00</div>
-              <div class="metric-footer">Counter & Delivery Cash Collected</div>
+              <div class="icon">
+                <i class="fa-solid fa-money-bill-wave"></i>
+              </div>
+              <a href="javascript:void(0)" onclick="switchTab('screen-cashbook')" class="small-box-footer">
+                Cash Book & Till <i class="fa-solid fa-arrow-circle-right"></i>
+              </a>
             </div>
 
-            <!-- Metric 3: Digital Collections (Purple) -->
-            <div class="metric-card metric-purple">
-              <div class="metric-header">
-                <span class="metric-title">DIGITAL SETTLEMENTS</span>
-                <div class="metric-icon-bubble">📱</div>
+            <!-- Metric 3: Digital Collections (Indigo Purple) -->
+            <div class="small-box bg-indigo">
+              <div class="inner">
+                <h3 class="font-mono" id="kpiDigital">₹0.00</h3>
+                <p>DIGITAL SETTLEMENTS</p>
+                <span class="small-box-desc">UPI + HP Pay + Bank RTGS</span>
               </div>
-              <div class="metric-value font-mono text-purple" id="kpiDigital">₹0.00</div>
-              <div class="metric-footer">UPI + HP Pay + Bank RTGS/NEFT</div>
+              <div class="icon">
+                <i class="fa-solid fa-qrcode"></i>
+              </div>
+              <a href="javascript:void(0)" onclick="switchTab('screen-report')" class="small-box-footer">
+                Digital Summary <i class="fa-solid fa-arrow-circle-right"></i>
+              </a>
             </div>
 
-            <!-- Metric 4: Outstanding Dues (Amber) -->
-            <div class="metric-card metric-amber">
-              <div class="metric-header">
-                <span class="metric-title">OUTSTANDING DUES</span>
-                <div class="metric-icon-bubble">⚠️</div>
+            <!-- Metric 4: Outstanding Dues (Amber Warning) -->
+            <div class="small-box bg-warning">
+              <div class="inner">
+                <h3 class="font-mono" id="kpiDues">₹0.00</h3>
+                <p>OUTSTANDING DUES</p>
+                <span class="small-box-desc">Uncollected Credit on Delivery Vendors</span>
               </div>
-              <div class="metric-value font-mono text-amber" id="kpiDues">₹0.00</div>
-              <div class="metric-footer">Uncollected Credit on Delivery Vendors</div>
+              <div class="icon">
+                <i class="fa-solid fa-file-invoice-dollar"></i>
+              </div>
+              <a href="javascript:void(0)" onclick="switchTab('screen-dues')" class="small-box-footer">
+                Customer Dues Ledger <i class="fa-solid fa-arrow-circle-right"></i>
+              </a>
             </div>
 
             <!-- Metric 5: Cylinders Delivered (Teal) -->
-            <div class="metric-card metric-teal">
-              <div class="metric-header">
-                <span class="metric-title">CYLINDERS DELIVERED</span>
-                <div class="metric-icon-bubble">🛢️</div>
+            <div class="small-box bg-teal">
+              <div class="inner">
+                <h3 class="font-mono" id="kpiCylinders">0 Pcs</h3>
+                <p>CYLINDERS DELIVERED</p>
+                <span class="small-box-desc">Delivery (374) + Godown (257)</span>
               </div>
-              <div class="metric-value font-mono text-teal" id="kpiCylinders">0 Pcs</div>
-              <div class="metric-footer">Delivery Total (374) + Godown (257)</div>
+              <div class="icon">
+                <i class="fa-solid fa-gas-pump"></i>
+              </div>
+              <a href="javascript:void(0)" onclick="switchTab('screen-vendors')" class="small-box-footer">
+                Vendor Dispatch Log <i class="fa-solid fa-arrow-circle-right"></i>
+              </a>
             </div>
 
-            <!-- Metric 6: Closing Cash In Hand (Rose/Slate) -->
-            <div class="metric-card metric-rose">
-              <div class="metric-header">
-                <span class="metric-title">CLOSING CASH IN HAND</span>
-                <div class="metric-icon-bubble">💼</div>
+            <!-- Metric 6: Closing Cash In Hand (Danger Rose) -->
+            <div class="small-box bg-danger">
+              <div class="inner">
+                <h3 class="font-mono" id="kpiClosingCash">₹0.00</h3>
+                <p>CLOSING CASH IN HAND</p>
+                <span class="small-box-desc">Actual Physical Cash in Till Box</span>
               </div>
-              <div class="metric-value font-mono" id="kpiClosingCash">₹0.00</div>
-              <div class="metric-footer">Actual Cash in Physical Till Box</div>
+              <div class="icon">
+                <i class="fa-solid fa-vault"></i>
+              </div>
+              <a href="javascript:void(0)" onclick="switchTab('screen-cashbook')" class="small-box-footer">
+                Verify Till Cash <i class="fa-solid fa-arrow-circle-right"></i>
+              </a>
+            </div>
+          </div>
+
+          <!-- VISUAL ANALYTICS & RECONCILIATION CHARTS -->
+          <div class="dashboard-charts-grid">
+            <div class="erp-card chart-card">
+              <div class="erp-card-header">
+                <div>
+                  <h4 class="card-title"><i class="fa-solid fa-chart-pie text-primary"></i> Payment Settlement Modes</h4>
+                  <span class="card-subtitle">Real-time split of Cash, UPI, HP Pay, and Credit Dues</span>
+                </div>
+              </div>
+              <div class="chart-canvas-wrapper">
+                <canvas id="chartPaymentModes"></canvas>
+              </div>
+            </div>
+
+            <div class="erp-card chart-card">
+              <div class="erp-card-header">
+                <div>
+                  <h4 class="card-title"><i class="fa-solid fa-chart-column text-success"></i> Cylinder Delivery & Sales Volume</h4>
+                  <span class="card-subtitle">Godown Sales vs Home Delivery vs Commercial 19KG</span>
+                </div>
+              </div>
+              <div class="chart-canvas-wrapper">
+                <canvas id="chartCylinderSales"></canvas>
+              </div>
             </div>
           </div>
 
@@ -1345,6 +1452,72 @@
       <div class="modal-foot">
         <button type="button" class="btn-erp-outline" onclick="closeModal('modalApiConfig')">Cancel</button>
         <button type="submit" class="btn-erp-primary" onclick="saveApiConfig()">Save Configuration</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Theme Palette Modal -->
+  <div id="modalThemePalette" class="modal-overlay hidden">
+    <div class="modal-box modal-md">
+      <div class="modal-head">
+        <h3><i class="fa-solid fa-palette text-primary"></i> ERP Theme & Palette Customizer</h3>
+        <button class="modal-close-btn" onclick="closeModal('modalThemePalette')">&times;</button>
+      </div>
+      <p class="modal-subtitle">Select an executive corporate palette or toggle Dark Mode instantly without reload.</p>
+
+      <div class="palette-picker-grid">
+        <button type="button" class="palette-choice-card" onclick="applyPresetPalette('navy')">
+          <div class="palette-strip" style="background: linear-gradient(135deg, #001f3f, #003366, #0074D9);"></div>
+          <div class="palette-info">
+            <strong>Enterprise Navy</strong>
+            <small>Default Corporate HP Gas Theme</small>
+          </div>
+        </button>
+
+        <button type="button" class="palette-choice-card" onclick="applyPresetPalette('sapphire')">
+          <div class="palette-strip" style="background: linear-gradient(135deg, #1e3a8a, #2563eb, #60a5fa);"></div>
+          <div class="palette-info">
+            <strong>Royal Sapphire</strong>
+            <small>Deep Blue Modern High-Contrast</small>
+          </div>
+        </button>
+
+        <button type="button" class="palette-choice-card" onclick="applyPresetPalette('emerald')">
+          <div class="palette-strip" style="background: linear-gradient(135deg, #064e3b, #059669, #34d399);"></div>
+          <div class="palette-info">
+            <strong>Emerald Green</strong>
+            <small>Fresh Fintech & Ledger Green</small>
+          </div>
+        </button>
+
+        <button type="button" class="palette-choice-card" onclick="applyPresetPalette('charcoal')">
+          <div class="palette-strip" style="background: linear-gradient(135deg, #18181b, #3f3f46, #71717a);"></div>
+          <div class="palette-info">
+            <strong>Graphite Slate</strong>
+            <small>Subtle Minimalist Dark Grey</small>
+          </div>
+        </button>
+
+        <button type="button" class="palette-choice-card" onclick="applyPresetPalette('crimson')">
+          <div class="palette-strip" style="background: linear-gradient(135deg, #881337, #be123c, #fb7185);"></div>
+          <div class="palette-info">
+            <strong>Ruby Crimson</strong>
+            <small>Bold Vibrant Red Accent</small>
+          </div>
+        </button>
+
+        <button type="button" class="palette-choice-card" onclick="applyPresetPalette('amber')">
+          <div class="palette-strip" style="background: linear-gradient(135deg, #78350f, #d97706, #fbbf24);"></div>
+          <div class="palette-info">
+            <strong>Sunset Amber</strong>
+            <small>Warm Energetic Earth Tone</small>
+          </div>
+        </button>
+      </div>
+
+      <div class="modal-foot">
+        <button type="button" class="btn-erp-outline" onclick="resetThemePalette()">Reset to Default</button>
+        <button type="button" class="btn-erp-primary" onclick="closeModal('modalThemePalette')">Done</button>
       </div>
     </div>
   </div>
